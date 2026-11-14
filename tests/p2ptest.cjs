@@ -17,15 +17,16 @@ class Peer extends Emitter {
 }
 function client(uid) {
   const els = {}; let click;
-  const mk = () => ({ innerHTML: '', hidden: false, disabled: false, value: '', textContent: '', setAttribute() {}, dataset: {}, classList: { toggle() {} }, focus() {}, select() {} });
+  const mk = () => ({ innerHTML: '', hidden: false, disabled: false, value: '', textContent: '', setAttribute() {}, getAttribute() { return null; }, dataset: {}, classList: { toggle() {}, add() {}, remove() {} }, focus() {}, select() {}, querySelectorAll: () => [], addEventListener() {}, getBoundingClientRect: () => ({ width: 0, height: 0 }) });
   const store = { _: { 'eic-token': uid }, get length() { return Object.keys(this._).length; }, key(i) { return Object.keys(this._)[i]; }, getItem(k) { return this._[k] ?? null; }, setItem(k, v) { this._[k] = String(v); } };
   const ctx = { console, setTimeout, clearTimeout, JSON, Math, Date, Promise, Peer, navigator: { clipboard: { writeText: async () => {} } },
-    document: { getElementById: id => els[id] || (els[id] = mk()), querySelectorAll: () => [], addEventListener: (t, f) => { if (t === 'click') click = f; } },
+    document: { getElementById: id => els[id] || (els[id] = mk()), querySelectorAll: () => [], addEventListener: (t, f) => { if (t === 'click') click = f; }, body: { classList: { toggle() {} } } },
+    matchMedia: () => ({ matches: true }), requestAnimationFrame: f => setTimeout(f, 0), performance: { now: () => Date.now() }, addEventListener() {},
     location: { hash: '', href: 'https://abnextc.github.io/eic/' }, localStorage: store };
   ctx.window = ctx; vm.createContext(ctx);
-  vm.runInContext(js + ';globalThis.__=()=>({G,MODE,NET,mine,canAct:canAct()});', ctx);
-  const press = attrs => { const ds = {}; for (const m of attrs.matchAll(/data-([a-z]+)="([^"]*)"/g)) ds[m[1]] = m[2].replace(/&quot;/g, '"'); return click({ target: { closest: () => ({ dataset: ds, disabled: false, id: '' }) } }); };
-  const buttons = ids => ids.map(i => els[i] ? els[i].innerHTML : '').join('').match(/<button type="button"[^>]*>/g) || [];
+  vm.runInContext(js + ';globalThis.__=()=>({G,MODE,NET,mine,canAct:canAct()});globalThis.tableAct=tableAct;', ctx);
+  const press = attrs => { const ds = {}; for (const m of attrs.matchAll(/data-([a-z]+)="([^"]*)"/g)) ds[m[1]] = m[2].replace(/&quot;/g, '"'); if (ds.act) return ctx.tableAct({ dataset: ds }); return click({ target: { closest: () => ({ dataset: ds, disabled: false, id: '' }) } }); };
+  const buttons = () => { const svg = els.table ? els.table.innerHTML : '', bar = els.bar ? els.bar.innerHTML : ''; return [...(svg.match(/<g [^>]*data-act="[^"]*"[^>]*>/g) || []).filter(x => !/data-act="sell"/.test(x)), ...(bar.match(/<button type="button"[^>]*>/g) || []).filter(x => !/data-look/.test(x))]; };
   return { els, press, buttons, st: () => ctx.__(), ctx, store };
 }
 const tick = (n = 3) => new Promise(r => { let k = 0; const f = () => (++k >= n ? r() : setTimeout(f, 0)); setTimeout(f, 0); });
@@ -53,7 +54,7 @@ const tick = (n = 3) => new Promise(r => { let k = 0; const f = () => (++k >= n 
     const gB = B.st().G, full = A.st().NET.H.full;
     if (full.phase === 'C') full.players.forEach((pl, p) => { if (B.st().mine.has(p)) return; pl.docks.forEach((d, i) => { if (d && d.loc !== 'port' && d.loc !== 'sea' && !d.stayed) { leakChecks++; if (gB.players[p].docks[i].type !== 'galleon' && d.type !== 'galleon') throw new Error('ship type leaked'); } }); });
     for (const m of ['indies', 'europe']) if (full.cards[m] != null && !full.cards.shown[m] && !full.cards.peek[m].some(p => B.st().mine.has(p)) && gB.cards[m] != null) throw new Error('card leaked');
-    const btns = actor.buttons(['sec-stock', 'sec-chars', 'sec-map', 'sec-ports', 'bar']).filter(a => /data-/.test(a) && !/disabled/.test(a) && !/data-(sell|minus|cancel)=/.test(a));
+    const btns = actor.buttons().filter(a => /data-/.test(a) && !/disabled/.test(a) && !/data-(minus|cancel)=/.test(a));
     if (!btns.length) throw new Error('no buttons ' + JSON.stringify(actor.st().G.awaiting) + ' busy ' + actor.st().NET.busy);
     await actor.press(btns[Math.floor(rr() * btns.length)]); clicks++;
     await tick(5);

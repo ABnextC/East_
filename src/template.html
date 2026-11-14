@@ -141,23 +141,70 @@ details.sect summary{cursor:pointer;font:700 15px var(--display)}
 .peek{color:#8a5a00;font-weight:600}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(50vh);z-index:9;background:#1b120c;color:var(--light);border:2px solid var(--brass);border-radius:10px;padding:10px 14px;max-width:90vw;font-size:14px}
 .vault.debt{background:#b4512a;color:#fff;border-radius:999px;padding:1px 8px;font-weight:600}
+
+/* ---- 테이블 화면 ---- */
+body.ingame main{padding:0;max-width:none;display:block}
+body.ingame header{position:fixed;top:0;left:0;right:0;z-index:6;padding:6px 12px;background:rgba(27,18,12,.92);border-bottom:2px solid var(--brass)}
+body.ingame h1{font-size:16px}
+#tablewrap{position:fixed;inset:48px 0 0 0;background:#3a2617;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 3px,transparent 3px 11px),repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 1px,transparent 1px 47px),linear-gradient(180deg,#4a301c,#2f1e12);overflow:hidden}
+#table{width:100%;height:100%;display:block;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+#table.dragging{cursor:grabbing}
+#table text{font-family:var(--body);pointer-events:none}
+#table .disp{font-family:var(--display)}
+#table [data-act]{cursor:pointer}
+#table [data-act]:focus{outline:none}
+#table [data-act]:focus-visible{filter:drop-shadow(0 0 0 #fff) drop-shadow(0 0 6px #fff)}
+#table .hot{filter:drop-shadow(0 0 6px rgba(255,212,94,.9))}
+#table .hot .hl{stroke:#ffd45e!important;stroke-width:5!important;stroke-dasharray:none!important;animation:pls 1.3s ease-in-out infinite}
+#table .hot .ring{animation:pls 1.3s ease-in-out infinite}
+#table .dimmed .hl{animation:none;stroke-width:1!important;stroke:#8a7350!important}
+#table .dimmed{opacity:.35;filter:none}
+#table .over{filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 16px #ffd45e)!important}
+#table .lifted{opacity:.2}
+#table .drag{cursor:grab}
+#ghost .lift{transform:scale(1.18);filter:drop-shadow(0 14px 8px rgba(0,0,0,.55))}
+#table .pulse{animation:pls 1.3s ease-in-out infinite}
+@keyframes pls{50%{stroke-opacity:.25}}
+@media (prefers-reduced-motion:reduce){#table .pulse,#table .hot .hl,#table .hot .ring{animation:none}}
+.camtools{position:absolute;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:4px;max-width:calc(100% - 120px)}
+.camtools button,.logbox summary{background:rgba(27,18,12,.85);color:var(--light);border:1px solid #6b5640;border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.camtools button:hover{border-color:var(--brass)}
+.logbox{position:absolute;top:10px;right:10px;max-width:min(380px,80vw);color:var(--light)}
+.logbox summary{list-style:none;text-align:center}
+.logbox[open]{background:rgba(27,18,12,.94);border:1px solid #6b5640;border-radius:10px;padding:8px}
+.logbox #log{margin:8px 0 0;padding:0;list-style:none;font-size:12px;max-height:50vh;overflow-y:auto}
+.logbox #log li{padding:3px 0;border-bottom:1px dashed #4a3828}
+#bar{background:rgba(27,18,12,.95)}
+.bar-c>button.ghostbtn{background:transparent;color:var(--light);border-color:#6b5640;margin-left:auto}
+
+@media (max-width:640px){
+  body.ingame header{padding:5px 8px;gap:6px;flex-wrap:nowrap}
+  body.ingame header h1{font-size:14px;white-space:nowrap}
+  body.ingame .roomtag{font-size:11px;padding:1px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+  body.ingame .tools{gap:4px}
+  body.ingame .tools button{padding:5px 8px;font-size:12px;white-space:nowrap}
+  #tablewrap{inset:40px 0 0 0}
+  .camtools{top:6px;left:6px;gap:3px;max-width:calc(100% - 70px);flex-wrap:nowrap;overflow-x:auto}
+  .camtools button,.logbox summary{padding:5px 8px;font-size:12px;white-space:nowrap}
+  .logbox{top:6px;right:6px}
+  #bar{padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));gap:6px}
+  .bar-m{font-size:12px}
+  .meeple.lg{width:24px;height:24px}
+}
 </style>
 </head>
 <body>
 <main>
-  <header class="wide"><h1>동인도회사</h1><span id="roomtag" class="roomtag"></span><div class="tools"><button id="undo" type="button">한 수 무르기</button><button id="new" type="button">새 게임</button><button id="leave" type="button" hidden>방 목록으로</button></div></header>
+  <header class="wide"><h1>동인도회사</h1><span id="roomtag" class="roomtag"></span><div class="tools"><button id="undo" type="button">무르기</button><button id="new" type="button">새 게임</button><button id="leave" type="button" hidden>나가기</button></div></header>
   <section id="lobby" class="sect wide lobby"></section>
-  <div id="game" class="wide gamewrap" hidden>
-  <div id="confirm" class="wide" hidden>지금 판을 버리고 새로 시작할까요? <button id="new-yes" type="button">새 게임 시작</button> <button id="new-no" type="button">계속하기</button></div>
-  <section id="status" class="sect wide"></section>
-  <section id="sec-stock" class="sect wide"></section>
-  <section id="sec-chars" class="sect wide"></section>
-  <section id="sec-map" class="sect wide"></section>
-  <section id="sec-europe" class="sect"></section>
-  <section id="sec-indies" class="sect"></section>
-  <section id="sec-ports" class="sect wide"></section>
-  <details class="sect wide"><summary>기록</summary><ol id="log"></ol></details>
-  <p class="note wide">온라인 방에서는 내 배와 내가 미리 본 카드만 보입니다. 다만 친구끼리 쓰는 용도라 마음먹고 페이지 코드를 뜯어보면 숨긴 정보도 볼 수 있어요.</p>
+  <div id="game" class="gamewrap" hidden>
+    <div id="tablewrap">
+      <svg id="table" viewBox="0 0 2400 1700" preserveAspectRatio="xMidYMid meet" role="application" aria-label="게임 테이블"></svg>
+      <div class="camtools" role="toolbar" aria-label="보기">
+        <button type="button" data-view="all">전체</button><button type="button" data-view="board">지도</button><button type="button" data-view="europe">유럽</button><button type="button" data-view="indies">인도</button><button type="button" data-view="mine">내 항구</button><button type="button" data-zoom="0.8" aria-label="확대">＋</button><button type="button" data-zoom="1.25" aria-label="축소">－</button><button type="button" id="autocam" aria-pressed="true">자동 시점</button>
+      </div>
+      <details class="logbox"><summary>기록</summary><ol id="log"></ol></details>
+    </div>
   </div>
 </main>
 <div id="toast" role="status" hidden></div>

@@ -7,6 +7,7 @@ function setNick(v) { try { localStorage.setItem('eic-nick', v); } catch (e) {} 
 function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { el.hidden = true; }, 3500); }
 function show(which) {
   $('lobby').hidden = which !== 'lobby'; $('game').hidden = which !== 'game'; $('bar').hidden = which !== 'game';
+  document.body.classList.toggle('ingame', which === 'game');
   $('undo').hidden = which !== 'game'; $('new').hidden = which !== 'game' || MODE !== 'local';
   $('leave').hidden = !(MODE === 'local' && which === 'game') && !NET.code;
   $('roomtag').hidden = !NET.code && which !== 'game'; $('roomtag').textContent = NET.code ? `방 ${NET.code}` : '혼자 테스트';
