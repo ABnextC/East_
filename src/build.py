@@ -7,7 +7,7 @@ data = json.load(open(os.path.join(ROOT, 'data', 'eic-data.json'), encoding='utf
 open(S('data.js'), 'w', encoding='utf-8').write('export const DATA = ' + json.dumps(data, ensure_ascii=False) + ';\n')
 d = open(S('data.js'), encoding='utf-8').read().replace('export const', 'const')
 e = open(S('engine.js'), encoding='utf-8').read(); e = re.sub(r"^import .*\n", '', e); e = re.sub(r'\bexport ', '', e)
-core = open(S('ui_table.js'), encoding='utf-8').read()
+core = open(S('geo.js'), encoding='utf-8').read() + open(S('ui_table.js'), encoding='utf-8').read().replace('/*MAP*/', open(S('map_antique.js'), encoding='utf-8').read())
 t = open(S('template.html'), encoding='utf-8').read()
 bundle = lambda net: (d + e + core + net).replace('</script', '<\\/script')
 gt = t.replace('<script>\n/*BUNDLE*/', '<script src="peerjs.min.js"></script>\n<script>\n/*BUNDLE*/')

@@ -198,110 +198,26 @@ function drawCerts() {
   });
   return s;
 }
-// ---------- 인도양 지도(실제 해안선을 단순화해 직접 그림) ----------
-// 경도 50~134°E, 위도 30°N~10°S. 1도 = 14.05px(가로), 14px(세로)
-const GP = (lon, lat) => [L.map.x + (lon - 50) * 14.05, L.map.y + (30 - lat) * 14];
-const GEO = {
-  asia: [[50,30],[52,27.5],[54.5,26.6],[56.3,27.1],[57.3,25.7],[61,25.2],[64,25.3],[66.6,25.4],[67.4,24.6],[68.5,23.5],[69.2,22.4],[70.3,20.9],[71.6,21.2],[72.6,21.3],[72.8,19],[73.3,16.8],[73.9,15],[74.6,13],[75.6,11.3],[76.3,9.6],[77.5,8.1],[78.2,9],[79.3,10.3],[79.9,11.9],[80.3,13.3],[80.1,15.5],[82.3,16.6],[84.5,18.5],[86.6,20],[87.3,21.4],[88.4,21.7],[89.5,21.9],[90.6,22.5],[91.8,22.3],[92.3,20.7],[93.6,19.2],[94.4,17.8],[94.3,16.1],[95.3,15.8],[96.3,16.5],[97.6,16.5],[98,14.4],[98.6,12.3],[98.5,10],[98.3,8.2],[99.6,6.6],[100.3,5.5],[100.8,3.9],[101.4,2.8],[102.2,2.2],[103.4,1.3],[104.2,1.5],[103.5,3.8],[103.1,5.4],[102.2,6.2],[101,6.9],[100.4,7.5],[100,9.2],[99.2,10.6],[99.6,12.4],[100.2,13.5],[100.9,12.7],[102,12],[102.9,11],[104.2,10.4],[104.8,8.7],[106.2,9.4],[106.8,10.4],[107.8,10.7],[109.2,11.6],[109.3,13.5],[108.8,15.4],[107.4,16.7],[106.3,18.2],[105.7,19.2],[106.5,20.4],[107.6,21.3],[108.6,21.6],[109.8,21.4],[110.2,20.3],[110.6,21.2],[111.8,21.7],[113.2,22.2],[113.6,22.6],[114.2,22.3],[115.6,22.8],[116.7,23.3],[117.6,24],[118.4,24.6],[119.4,25.4],[119.7,26.4],[120.4,27.3],[121.3,28.2],[121.9,29.3],[122,30]],
-  arabia: [[50,24.5],[51.3,24.2],[51.6,25.9],[52.4,24.2],[54.2,24.3],[55.6,25.6],[56.3,26.3],[56.4,24.8],[57.8,23.7],[59.4,22.8],[59.8,22.4],[59,21],[58.4,20.4],[57.7,19],[56.3,17.9],[55,17],[52.5,16.3],[50,15]],
-  horn: [[50,12.3],[51.3,11.9],[51.1,10.5],[50.8,9.5],[50,8.3]],
-  ceylon: [[79.9,9.8],[80.3,9.7],[81.2,8.5],[81.9,7.3],[81.7,6.3],[80.6,5.9],[80,6.7],[79.8,8]],
-  hainan: [[108.6,19.2],[109.6,20],[110.7,20.1],[111.1,19.6],[110.4,18.6],[109.5,18.2],[108.7,18.5]],
-  formosa: [[120.1,23],[120.7,22],[121,22.3],[121.8,24.5],[121.6,25.3],[121,25.1],[120.2,24.1]],
-  sumatra: [[95.3,5.6],[97.5,5.2],[98.7,3.8],[100.4,2.2],[101.5,1.6],[103.5,-0.8],[104.5,-1.9],[105.8,-3.5],[105.9,-5.8],[104.6,-5.9],[102.3,-4],[101,-2.3],[100.3,-1],[99,1],[98.3,2.2],[97,3.5],[95.5,4.6]],
-  java: [[105.2,-6.8],[106.1,-5.9],[108,-6.3],[110.4,-6.9],[112.6,-6.9],[114.4,-7.7],[114.5,-8.7],[112.5,-8.4],[110,-8.1],[108,-7.8],[106.4,-7.4]],
-  lesser: [[115.2,-8.1],[118.8,-8.3],[122.8,-8.4],[124.5,-8.1],[124.6,-8.8],[121,-8.9],[117,-9],[115.4,-8.8]],
-  borneo: [[109,1.5],[109.6,2],[111,1.6],[113,3.2],[115.4,5],[116.8,6.9],[117.9,6.2],[119.3,5.3],[118.2,4.4],[117.8,1.8],[118.9,0.9],[117.5,0.2],[116.6,-1.4],[116.3,-3.5],[114.6,-4.1],[112.5,-3.3],[110.3,-2.9],[109.6,-1],[109,0.5]],
-  sulawesi: [[119.4,-5.5],[120.4,-5.6],[120.3,-3],[121.1,-2.7],[122,-4.8],[122.8,-4.5],[121.3,-1.5],[123.3,-0.9],[121.7,-0.7],[120.6,0.5],[124.5,1.4],[125.1,1.6],[124,0.4],[120.2,0.4],[119.8,-0.6],[119.4,-2.6]],
-  luzon: [[120.6,18.5],[122.2,18.5],[122.3,17],[121.6,15.8],[122.1,14],[124,13],[123.3,12.8],[121.8,13.8],[120.6,14.3],[119.9,16],[120.4,16.6]],
-  visayas: [[122,11.8],[123.3,10.6],[124.2,11.5],[125.6,11.2],[125.2,10],[123.6,9.5],[122.5,10.4]],
-  mindanao: [[122,7],[123.7,7.8],[125.4,9.7],[126.6,8.5],[126.2,6.3],[125.4,5.6],[124.2,6.3],[122.5,7.4]],
-  newguinea: [[131,-1],[133,-0.6],[134,-1],[134,-4],[132.5,-4],[131.3,-3]],
-  halmahera: [[127.7,2.2],[128.6,1.3],[128.2,-0.8],[127.4,0.4]],
-};
-const LANDNAME = [['페르시아', 56, 28.6], ['아라비아', 54, 20], ['인도', 78.5, 22], ['버마', 95.8, 22], ['시암', 101.4, 15.5], ['안남', 105.6, 15.2], ['청', 112, 26.5], ['실론', 80.8, 4.9], ['수마트라', 101.5, -1.2], ['자와', 110, -9.2], ['보르네오', 114, 0], ['셀레베스', 121.6, -3.6], ['루손', 121.2, 17.2], ['민다나오', 124.4, 5]];
-const CITY_GEO = { III: [[72.8, 19], [88.4, 22.6], [79.8, 11.9]], II: [[102.2, 2.2], [106.8, -6.2]], I: [[113.5, 22.2], [114.2, 22.3], [120.5, 23.6]] };
-const CITY_LBL = { III: [[-10, 5, 'end'], [10, 5, 'start'], [10, 5, 'start']], II: [[-10, 5, 'end'], [10, 14, 'start']], I: [[-10, 16, 'end'], [10, 16, 'start'], [12, 5, 'start']] };
-const POST_OFF = { III: [[0, -19], [0, -19], [0, -19]], II: [[0, -19], [0, -19]], I: [[-13, -17], [13, -17], [0, -19]] };
-// 항로 칸(배가 머무는 바다). 지역의 상품을 사는 바다
-const ZONE_GEO = { III: [56.5, 18.5, 73, 4], II: [80, 3, 95, -9.6], I: [109.6, 19.6, 119.9, 7.2] };
-const regionBox = r => { const [a, b, c, d] = ZONE_GEO[r], p = GP(a, b), q = GP(c, d); return { x: p[0], y: p[1], w: q[0] - p[0], h: q[1] - p[1] }; };
-const polyD = pts => 'M' + pts.map(([lo, la]) => GP(lo, la).map(v => v.toFixed(1)).join(' ')).join('L') + 'Z';
-function shipGrid(b, n) {
-  let best = { r: 0, cols: 1 };
-  for (let cols = 1; cols <= Math.max(1, n); cols++) { const rows = Math.ceil(Math.max(1, n) / cols), r = Math.min((b.w - 12) / cols, (b.h - 46) / rows) / 2 - 3; if (r > best.r) best = { r, cols }; }
-  best.r = Math.min(40, best.r); return best;
-}
-let MAP_BG = {};
-function mapBackground() {
-  const P = (G && G.period) || 1, E = ERA[P];
-  if (MAP_BG[P]) return MAP_BG[P];
-  const M = L.map;
-  let s = `<clipPath id="mapclip"><rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" rx="16"/></clipPath>
-    <rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" rx="16" fill="url(#sea)" filter="url(#sh)"/>
-    <g clip-path="url(#mapclip)">`;
-  for (let lat = 25; lat >= -5; lat -= 5) { const y = GP(50, lat)[1]; s += `<line x1="${M.x}" x2="${M.x + M.w}" y1="${y}" y2="${y}" stroke="${E.grid}" stroke-width="${lat === 0 ? 1.4 : 0.7}" opacity="${lat === 0 ? 0.45 : 0.22}" ${lat === 0 ? '' : 'stroke-dasharray="4 6"'}/>`; }
-  for (let lon = 60; lon <= 130; lon += 10) { const x = GP(lon, 0)[0]; s += `<line x1="${x}" x2="${x}" y1="${M.y}" y2="${M.y + M.h}" stroke="${E.grid}" stroke-width=".7" opacity=".18" stroke-dasharray="4 6"/>`; }
-  s += sTxt(GP(130.5, 0)[0], GP(0, 0.4)[1], '적도', { s: 11, f: '#d7ebe8' });
-  // 얕은 바다 테두리 + 육지
-  for (const k in GEO) s += `<path d="${polyD(GEO[k])}" fill="none" stroke="#9ccbc6" stroke-width="9" stroke-linejoin="round" opacity=".35"/>`;
-  for (const k in GEO) s += `<path d="${polyD(GEO[k])}" fill="url(#land)" stroke="${E.coast}" stroke-width="1.6" stroke-linejoin="round"/>`;
-  // 산맥과 강(분위기)
-  const hill = (lo, la) => { const [x, y] = GP(lo, la); return `<path d="M${x - 9} ${y + 4} l9 -10 l9 10" fill="none" stroke="#a4895c" stroke-width="1.6"/>`; };
-  [[70, 28.5], [74, 29], [78, 29.3], [82, 28.8], [86, 28.5], [90, 28.2], [94, 27.8], [97, 25], [99, 21], [76, 13], [74.5, 16]].forEach(([a, b]) => s += hill(a, b));
-  const river = pts => `<path d="M${pts.map(p => GP(...p).join(' ')).join('L')}" fill="none" stroke="#7fb1b6" stroke-width="1.8" stroke-linecap="round"/>`;
-  s += river([[88.6, 22], [86, 25.3], [83, 25.6], [80, 26.5], [78, 28]]) + river([[67.6, 24.3], [69.5, 27], [71, 29.8]]) + river([[94.9, 16.2], [95.4, 19], [96, 22], [97, 25.5]]) + river([[113.4, 22.6], [110, 23.4], [107, 23.7]]);
-  for (const [n, lo, la] of LANDNAME) { const [x, y] = GP(lo, la); s += sTxt(x, y, n, { a: 'middle', s: n.length > 2 ? 15 : 17, w: 700, f: E.label, cls: 'disp' }); }
-  // 바다 이름
-  [['아라비아해', 64, 12.5], ['벵골만', 89, 15], ['남중국해', 114.5, 14], ['인 도 양', 75.5, -1.2], ['자와해', 111, -5]].forEach(([n, lo, la]) => { const [x, y] = GP(lo, la); s += sTxt(x, y, n, { a: 'middle', s: n.length > 4 ? 22 : 15, w: 700, f: 'rgba(233,243,241,.5)', cls: 'disp sea-name' }); });
-  // 유럽에서 오는 길: 수에즈 전에는 희망봉을 돌아 남서쪽에서, 뒤에는 아덴에서
-  if (P < 5) { const [ax, ay] = GP(50, -2.4); s += `<path d="M${ax - 10} ${ay + 10} q50 -10 90 -70" fill="none" stroke="#fff6dc" stroke-width="2.5" stroke-dasharray="7 6" opacity=".75" marker-end="url(#arr)"/>${sTxt(ax + 8, ay - 8, '희망봉을 돌아', { s: 12, w: 700, f: '#fff6dc' })}${sTxt(ax + 8, ay + 7, '유럽에서', { s: 12, w: 700, f: '#fff6dc' })}`; }
-  else { const [ax, ay] = GP(50, 12.8); s += `<path d="M${ax - 10} ${ay} q60 6 120 -40" fill="none" stroke="#fff6dc" stroke-width="2.5" stroke-dasharray="7 6" opacity=".8" marker-end="url(#arr)"/>${sTxt(ax + 6, ay + 20, '수에즈에서', { s: 12, w: 700, f: '#fff6dc' })}`; }
-  const route = (pts, col, w, dash) => `<path d="M${pts.map(p => GP(...p).map(v => v.toFixed(1)).join(' ')).join('L')}" fill="none" stroke="${col}" stroke-width="${w}" stroke-dasharray="${dash}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  if (P <= 2) { // 항정선(나침반에서 뻗는 선)과 바다 괴물
-    const [ox, oy] = GP(91, -3.5);
-    for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8; s += `<line x1="${ox}" y1="${oy}" x2="${ox + Math.cos(a) * 1400}" y2="${oy + Math.sin(a) * 1400}" stroke="${E.grid}" stroke-width=".8" opacity="${k % 2 ? 0.12 : 0.22}"/>`; }
-    if (P === 1) { const [mx, my] = GP(99.5, -8.2); s += `<g transform="translate(${mx},${my})" opacity=".8"><path d="M-46 4c8-14 16-14 22 0s14 14 20 0 14-14 20 0 12 10 18 2" fill="none" stroke="#3e5640" stroke-width="5" stroke-linecap="round"/><circle cx="36" cy="2" r="5" fill="#3e5640"/><path d="M40 0l8-3-6 6z" fill="#3e5640"/><circle cx="37" cy="0.5" r="1.2" fill="#fff6dc"/><path d="M-30-6l3-6 3 6M-10 -6l3-6 3 6M10 -6l3-6 3 6" fill="#3e5640"/></g>${sTxt(mx, my + 26, '이곳에 괴물이 산다', { a: 'middle', s: 11, f: 'rgba(255,246,220,.6)', cls: 'disp' })}`; }
-  }
-  if (P >= 3) { const [x, y] = GP(103.8, 1.3); s += `<circle cx="${x}" cy="${y}" r="4" fill="#2b2118" stroke="#fff6dc" stroke-width="1.2"/>${sTxt(x + 8, y + 15, '싱가포르', { s: 11, w: 700, f: '#2b2118', cls: 'city-lbl' })}`; }
-  if (P === 4) { s += route([[114.2, 21.5], [113, 16], [110.6, 9], [107.5, 3], [105.7, -5.6], [102, -9.2], [90, -10.4]], 'rgba(255,214,120,.85)', 2.2, '2 7');
-    const [x, y] = GP(111.3, 4.6); s += sTxt(x, y, '차 경주 항로', { a: 'middle', s: 12, w: 700, f: '#ffe7a8' }); }
-  if (P === 5) { const cable = 'rgba(255,255,255,.75)';
-    s += route([[50, 12.6], [60, 16], [72.8, 19]], cable, 1.6, '1 4') + route([[80.3, 13.1], [92, 9], [100.3, 5.4], [103.8, 1.3]], cable, 1.6, '1 4') + route([[103.8, 1.3], [105.5, -3], [106.8, -6.1]], cable, 1.6, '1 4') + route([[103.8, 1.3], [108.5, 8], [112, 16], [114.2, 22.1]], cable, 1.6, '1 4');
-    const [x, y] = GP(87.5, 7.2); s += sTxt(x, y, '해저 전신선', { a: 'middle', s: 12, w: 700, f: '#fff' });
-    for (const c of [[72.8, 19], [103.8, 1.3], [114.2, 22.3]]) { const [cx, cy] = GP(...c); s += `<rect x="${cx - 4}" y="${cy + 6}" width="8" height="6" fill="#2b2b2b" opacity=".7"/>`; }
-  }
-  // 지도 이름표(카르투슈)
-  { const [cx, cy] = GP(50.6, -4.4), w = 284, h = 80;
-    s += `<g transform="translate(${cx},${cy})"><rect width="${w}" height="${h}" rx="${P <= 2 ? 14 : 6}" fill="${E.paper[0]}" stroke="${E.coast}" stroke-width="2"/><rect x="5" y="5" width="${w - 10}" height="${h - 10}" rx="${P <= 2 ? 10 : 3}" fill="none" stroke="${E.coast}" stroke-width=".8"/>
-      ${P <= 2 ? `<path d="M-6 ${h / 2}c6-10 6-20 0-30M${w + 6} ${h / 2}c-6-10-6-20 0-30" fill="none" stroke="${E.coast}" stroke-width="2"/>` : ''}
-      ${sTxt(14, 24, `${E.years} · ${E.name}`, { s: 15, w: 700, f: '#2b2118', cls: 'disp' })}${sTxt(14, 46, E.sub[0], { s: 12, f: '#4a3a28' })}${sTxt(14, 63, E.sub[1], { s: 12, f: '#4a3a28' })}</g>`; }
-  // 나침반
-  const [cx, cy] = GP(128.8, 25.3);
-  s += `<g transform="translate(${cx},${cy})" opacity=".85"><circle r="34" fill="rgba(255,250,240,.12)" stroke="#fff6dc" stroke-width="1.2"/><circle r="24" fill="none" stroke="#fff6dc" stroke-width=".8"/>
-    <path d="M0 -32 L6 -6 L0 0 L-6 -6Z" fill="#c8402f"/><path d="M0 32 L6 6 L0 0 L-6 6Z" fill="#fff6dc"/><path d="M-32 0 L-6 -6 L0 0 L-6 6Z M32 0 L6 -6 L0 0 L6 6Z" fill="#fff6dc" opacity=".8"/>${sTxt(0, -40, 'N', { a: 'middle', s: 13, w: 700, f: '#fff6dc' })}</g>`;
-  s += `<rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" fill="url(#mapvig)"/></g><rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" rx="16" fill="none" stroke="${P === 5 ? '#2a3a48' : '#3e2a14'}" stroke-width="5"/><rect x="${M.x + 6}" y="${M.y + 6}" width="${M.w - 12}" height="${M.h - 12}" rx="12" fill="none" stroke="#c9b48a" stroke-width="1.5"/>`;
-  return (MAP_BG[P] = s);
-}
+/*MAP*/
 function drawMap() {
-  const aw = G.awaiting, la = LA();
+  const aw = G.awaiting, la = LA(), S = MS();
   let s = mapBackground();
   for (const r of REG_ORDER) {
     const b = regionBox(r), rg = DATA.regions[r], ships = G.regions[r];
     const drop = canAct() && aw.type === 'sail' && la.some(a => a.type === 'sail' && a.region === r && (ui.ship == null || a.dock === ui.ship));
     // 항로 칸
     s += `<g class="${drop ? 'hot' : ''}" ${drop ? `data-drop="region" ${actAttrs('region', `data-r="${r}"`, `${rg.name}로 보내기`)}` : ''}>
-      <rect class="hl zone" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="14" fill="rgba(16,48,58,.28)" stroke="#fff6dc" stroke-width="2" stroke-dasharray="8 6"/>
-      <g transform="translate(${b.x + 8},${b.y + 8})"><rect width="${b.w - 16}" height="54" rx="8" fill="rgba(255,246,220,.92)" stroke="#6f5a3a"/>
-        <circle cx="16" cy="16" r="11" fill="#16303d"/>${sTxt(16, 20.5, r, { a: 'middle', s: 11, w: 700, f: '#fff', cls: 'disp' })}
-        ${sTxt(32, 22, rg.name, { s: 15, w: 700, cls: 'disp' })}
+      <rect class="hl zone" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="10" fill="${S.zone}" stroke="${S.ink}" stroke-width="1.8" stroke-dasharray="7 4"/>
+      <g transform="translate(${b.x + 8},${b.y + 8})"><rect width="${b.w - 16}" height="54" rx="4" fill="${S.paper}" fill-opacity=".94" stroke="${S.ink}" stroke-width="1.2"/><rect x="3" y="3" width="${b.w - 22}" height="48" rx="2" fill="none" stroke="${S.ink}" stroke-width=".5"/>
+        <circle cx="16" cy="16" r="11" fill="${S.ink}"/>${sTxt(16, 20.5, r, { a: 'middle', s: 11, w: 700, f: '#fff', cls: 'disp' })}
+        ${sTxt(32, 22, rg.name, { s: 15, w: 700, f: S.ink, cls: 'disp' })}
         ${rg.goods.map((g, k) => `<g transform="translate(${8 + k * 20},34)">${sCube(g, 14)}</g>`).join('')}
-        ${sTxt(b.w - 16 - 30, 46, '항해비', { a: 'end', s: 11, f: '#6e5c45' })}${rg.sailCost ? sCoin(b.w - 16 - 15, 41, 10, rg.sailCost) : sTxt(b.w - 16 - 8, 46, '0', { a: 'end', s: 13, w: 700 })}</g></g>`;
+        ${sTxt(b.w - 16 - 30, 46, '항해비', { a: 'end', s: 11, f: S.ink })}${rg.sailCost ? sCoin(b.w - 16 - 15, 41, 10, rg.sailCost) : sTxt(b.w - 16 - 8, 46, '0', { a: 'end', s: 13, w: 700 })}</g></g>`;
     // 도시와 교역소
     rg.cities.forEach((c, i) => {
       const [x, y] = GP(...CITY_GEO[r][i]), [dx, dy, an] = CITY_LBL[r][i], own = G.cities[r + i];
-      s += `<circle cx="${x}" cy="${y}" r="5" fill="#2b2118" stroke="#fff6dc" stroke-width="1.5"/>`;
-      s += `<g transform="translate(${x + dx},${y + dy})">${sTxt(0, 0, c, { a: an, s: 13, w: 700, f: '#2b2118', cls: 'city-lbl' })}</g>`;
+      s += `<circle cx="${x}" cy="${y}" r="5" fill="${S.paper}" stroke="${S.ink}" stroke-width="1.8"/><circle cx="${x}" cy="${y}" r="2" fill="${S.ink}"/>`;
+      s += `<g transform="translate(${x + dx},${y + dy})">${sTxt(0, 0, c, { a: an, s: 13, w: 700, f: S.ink, cls: 'city-lbl disp' })}</g>`;
       const tx = x + POST_OFF[r][i][0], ty = y + POST_OFF[r][i][1];
       s += `<circle cx="${tx}" cy="${ty}" r="11" fill="${own != null ? 'none' : 'rgba(255,246,220,.75)'}" stroke="#6f5a3a" stroke-dasharray="${own != null ? '0' : '3 2'}"/>`;
       if (own != null) s += pc(`tp${r}${i}`, 'tp' + own, tx, ty, `<path d="M-10 7 v-9 l10 -8 l10 8 v9 z" fill="${PCOL[own]}" stroke="rgba(0,0,0,.6)" stroke-width="1.5"/>`);
@@ -313,9 +229,9 @@ function drawMap() {
       const hide = !seeAll() && G.phase === 'C' && !d.stayed && !mine.has(e.p), cur = aw.type === 'load' && aw.player === e.p && aw.dock === e.dock;
       s += pc(`sh${e.p}.${e.dock}`, `ship${e.p}`, x, y, sShip(d, e.p, rr, hide) + (cur ? `<circle r="${rr + 8}" fill="none" stroke="#ffd45e" stroke-width="5" class="pulse"/>` : ''));
     });
-    if (!n && drop) s += sTxt(b.x + b.w / 2, b.y + b.h / 2 + 20, '여기로 끌어다 놓기', { a: 'middle', s: 14, w: 700, f: '#fff6dc' });
+    if (!n && drop) s += sTxt(b.x + b.w / 2, b.y + b.h / 2 + 20, '여기로 끌어다 놓기', { a: 'middle', s: 14, w: 700, f: S.ink });
   }
-  if (G.phase === 'D') { const [x, y] = GP(92, 28.6); s += sTxt(x, y, '지역 I → II → III, 빠른 배부터 싣습니다', { a: 'middle', s: 13, w: 700, f: '#fff6dc' }); }
+  if (G.phase === 'D') { const [x, y] = GP(92, 28.6); s += sTxt(x, y, '지역 I → II → III, 빠른 배부터 싣습니다', { a: 'middle', s: 13, w: 700, f: S.ink, cls: 'city-lbl' }); }
   return s;
 }
 
@@ -478,6 +394,7 @@ function drawAgents() {
   return s;
 }
 const defs = E => `<defs>
+  <marker id="arri" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${MS().ink}"/></marker>
   <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#fff6dc"/></marker>
   <filter id="sh" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity=".45"/></filter>
   <radialGradient id="gold" cx=".35" cy=".3"><stop offset="0" stop-color="#ffefb0"/><stop offset=".6" stop-color="#e2b13c"/><stop offset="1" stop-color="#b8861c"/></radialGradient>
@@ -486,7 +403,7 @@ const defs = E => `<defs>
   <linearGradient id="leather" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b85a2e"/><stop offset="1" stop-color="#8d3f1d"/></linearGradient>
   <linearGradient id="wood2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5334"/><stop offset="1" stop-color="#5a3a20"/></linearGradient>
   <radialGradient id="sea" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="${E.sea[0]}"/><stop offset="1" stop-color="${E.sea[1]}"/></radialGradient>
-  <radialGradient id="mapvig" cx=".5" cy=".5" r=".72"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#3a2410" stop-opacity="${E === ERA[1] ? .45 : E === ERA[2] ? .3 : .12}"/></radialGradient>
+  <radialGradient id="mapvig" cx=".5" cy=".5" r=".75"><stop offset=".55" stop-color="#6a4218" stop-opacity="0"/><stop offset="1" stop-color="#6a4218" stop-opacity="${MS().vig}"/></radialGradient>
   <linearGradient id="land" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${E.land[0]}"/><stop offset="1" stop-color="${E.land[1]}"/></linearGradient>
   <linearGradient id="stone2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1ece0"/><stop offset="1" stop-color="#d6cdb8"/></linearGradient>
   <linearGradient id="eu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a6170"/><stop offset="1" stop-color="#173f49"/></linearGradient>
