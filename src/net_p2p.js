@@ -172,7 +172,7 @@ function takeRoom(m) {
   NET.room = m.room;
   mine = new Set(m.room.seats.map((s, i) => (s && s.uid === NET.uid ? i : -1)).filter(i => i >= 0));
   if (m.room.status === 'lobby') { G = null; show('lobby'); renderLobby(); return; }
-  if (m.room.ver !== NET.ver || !G) { G = JSON.parse(m.state); NET.ver = m.room.ver; ui = {}; }
+  if (m.room.ver !== NET.ver || !G) { G = JSON.parse(m.state); NET.ver = m.room.ver; ui = { lastEra: ui.lastEra }; }
   NET.busy = false; clearTimeout(netAct.t);
   show('game'); render();
 }

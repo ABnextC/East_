@@ -78,7 +78,7 @@ function takeRoom(d) {
   NET.room = d;
   mine = new Set(d.seats.map((s, i) => (s && s.uid === NET.uid ? i : -1)).filter(i => i >= 0));
   if (d.status === 'lobby') { G = null; show('lobby'); renderLobby(); return; }
-  if (!NET.busy && (d.ver !== NET.ver || !G)) { G = JSON.parse(d.state); NET.ver = d.ver; ui = {}; }
+  if (!NET.busy && (d.ver !== NET.ver || !G)) { G = JSON.parse(d.state); NET.ver = d.ver; ui = { lastEra: ui.lastEra }; }
   show('game'); render();
 }
 function openRoom(code) {

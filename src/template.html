@@ -193,6 +193,21 @@ body.ingame h1{font-size:16px}
   .bar-m{font-size:12px}
   .meeple.lg{width:24px;height:24px}
 }
+
+#tablewrap.e1{background:radial-gradient(ellipse at 50% 40%,rgba(255,190,110,.18),transparent 60%),repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 3px,transparent 3px 13px),linear-gradient(180deg,#3b2414,#1e120a)}
+#tablewrap.e2{background:repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 2px,transparent 2px 10px),repeating-linear-gradient(90deg,rgba(0,0,0,.1) 0 1px,transparent 1px 53px),linear-gradient(180deg,#5a2418,#30120c)}
+#tablewrap.e3{background:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 3px,transparent 3px 11px),repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 1px,transparent 1px 47px),linear-gradient(180deg,#5a3a20,#3a2414)}
+#tablewrap.e4{background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 9px),repeating-linear-gradient(90deg,rgba(0,0,0,.07) 0 1px,transparent 1px 61px),linear-gradient(180deg,#7a5230,#4e3218)}
+#tablewrap.e5{background:radial-gradient(ellipse at 50% 45%,rgba(255,255,255,.07),transparent 65%),repeating-radial-gradient(circle at 30% 30%,rgba(0,0,0,.05) 0 1px,transparent 1px 3px),linear-gradient(180deg,#1f5a3a,#123826)}
+#era{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;opacity:0;text-align:center;color:#fff6dc;background:rgba(27,18,12,.82);border:2px solid var(--brass);border-radius:14px;padding:16px 26px;max-width:min(560px,86vw);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#era.show{animation:eraIn 3.4s ease forwards}
+#era .era-k{font-size:13px;letter-spacing:.12em;color:#e8c878}
+#era .era-n{font:700 26px/1.3 var(--display);margin:4px 0}
+#era .era-s{font-size:14px;opacity:.85}
+@keyframes eraIn{0%{opacity:0;transform:translate(-50%,-40%)}12%{opacity:1;transform:translate(-50%,-50%)}78%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){#era.show{animation:eraFade 3.4s step-end forwards}@keyframes eraFade{0%{opacity:1}100%{opacity:0}}}
+.cube svg{display:block;width:100%;height:100%}
+#table .shipname{paint-order:stroke;stroke:rgba(255,255,255,.75);stroke-width:2.5px}
 </style>
 </head>
 <body>
@@ -201,6 +216,7 @@ body.ingame h1{font-size:16px}
   <section id="lobby" class="sect wide lobby"></section>
   <div id="game" class="gamewrap" hidden>
     <div id="tablewrap">
+      <div id="era" aria-live="polite"></div>
       <svg id="table" viewBox="0 0 2400 1700" preserveAspectRatio="xMidYMid meet" role="application" aria-label="게임 테이블"></svg>
       <div class="camtools" role="toolbar" aria-label="보기">
         <button type="button" data-view="all">전체</button><button type="button" data-view="board">지도</button><button type="button" data-view="europe">유럽</button><button type="button" data-view="indies">인도</button><button type="button" data-view="mine">내 항구</button><button type="button" data-zoom="0.8" aria-label="확대">＋</button><button type="button" data-zoom="1.25" aria-label="축소">－</button><button type="button" id="autocam" aria-pressed="true">자동 시점</button>
