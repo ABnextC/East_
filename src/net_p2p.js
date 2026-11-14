@@ -37,8 +37,8 @@ function renderLobby() {
       <label class="fld" for="code">방 코드로 들어가기</label>
       <div class="row"><input id="code" maxlength="4" placeholder="ABCD" autocapitalize="characters"><button type="button" data-l="joincode" ${online ? '' : 'disabled'}>들어가기</button></div>
       ${saved ? `<h3>내가 만든 방 이어서 하기</h3><ul class="rooms">${saved}</ul>` : ''}
-${evOptHTML()}
-      <hr><div class="row"><button type="button" data-l="local">혼자 4자리 테스트</button><span class="hint">한 기기에서 네 자리를 번갈아 조작합니다.</span></div>`;
+      <hr><div class="row"><button type="button" data-l="local">혼자 4자리 테스트</button><span class="hint">한 기기에서 네 자리를 번갈아 조작합니다.</span></div>
+      ${evOptHTML()}`;
     return;
   }
   const status = NET.role === 'host' ? (NET.online ? '방장 · 손님을 기다리는 중' : '연결 준비 중…') : (NET.hostGone ? '방장과 연결이 끊겼어요. 다시 잇는 중…' : d ? '방장과 연결됨' : '방장에게 연결하는 중…');
@@ -54,7 +54,7 @@ ${evOptHTML()}
     <div class="row"><input id="link" readonly value="${esc(roomLink())}"><button type="button" data-l="copy">링크 복사</button></div>
     <p class="hint">친구에게 이 링크를 보내거나, 같은 주소에서 방 코드 <b>${esc(NET.code)}</b>를 입력하게 하세요.</p>
     <div class="seats">${seats}</div>
-    <p class="hint">규칙: ${d.events ? '<b>확장 「시대의 사건」 켬</b>' : '기본 규칙(확장 없음)'}</p>
+    ${NET.role === 'host' ? evOptHTML('roomev', !!d.events, '방장만 바꿀 수 있어요') : `<p class="hint">규칙: ${d.events ? '<b>확장 「시대의 사건」 켬</b>' : '기본 규칙(확장 없음)'} · 방장이 정합니다</p>`}
     <p class="hint">한 사람이 여러 자리에 앉아도 됩니다. 네 자리가 다 차야 시작할 수 있어요.</p>
     <div class="row"><button type="button" class="go" data-l="start" ${full && seated ? '' : 'disabled'}>게임 시작</button><button type="button" data-l="back">방에서 나가기</button></div>`;
 }
@@ -71,7 +71,7 @@ function redact(full, seatsMine) {
 const seatsOf = (room, uid) => new Set(room.seats.map((s, i) => (s && s.uid === uid ? i : -1)).filter(i => i >= 0));
 function viewFor(uid) {
   const H = NET.H, r = H.room;
-  return { t: 'room', room: { code: NET.code, status: r.status, seats: r.seats.map(s => s && { uid: s.uid, name: s.name, on: s.uid === NET.uid || H.conns.has(s.uid) }), ver: r.ver, prev: !!H.prev, prevBy: r.prevBy },
+  return { t: 'room', room: { code: NET.code, status: r.status, seats: r.seats.map(s => s && { uid: s.uid, name: s.name, on: s.uid === NET.uid || H.conns.has(s.uid) }), ver: r.ver, prev: !!H.prev, prevBy: r.prevBy, events: !!r.events },
     state: r.status === 'lobby' ? null : JSON.stringify(redact(H.full, seatsOf(r, uid))) };
 }
 function hostSave() { try { localStorage.setItem(hostKey(NET.code), JSON.stringify({ room: NET.H.room, full: NET.H.full, prev: NET.H.prev, at: Date.now() })); } catch (e) {} }
@@ -94,6 +94,9 @@ function hostMsg(from, m) {
     if (r.status !== 'lobby' || !r.seats.every(Boolean) || !r.seats.some(s => s.uid === from.uid)) return;
     H.full = createGame({ seed: Math.floor(Math.random() * 1e9), names: r.seats.map(s => s.name), events: !!r.events });
     r.status = 'playing'; r.ver = 1; H.prev = null; r.prevBy = null;
+  } else if (m.t === 'opt') {
+    if (r.status !== 'lobby' || from.uid !== NET.uid) return;
+    r.events = !!m.events;
   } else if (m.t === 'act') {
     if (r.status !== 'playing') return;
     if (m.ver !== r.ver) return err('판이 바뀌어서 최신 상태로 다시 그렸어요');
@@ -192,6 +195,7 @@ function leaveRoom() {
   show('lobby'); renderLobby();
 }
 function readNick() { const n = ($('nick') && $('nick').value || '').trim(); if (n) setNick(n); return n || nick(); }
+function roomSetEvents(v) { if (NET.role === 'host') send({ t: 'opt', events: !!v }); }
 async function lobbyClick(b) {
   const l = b.dataset.l;
   if (b.id === 'leave') { if (MODE === 'local') { MODE = null; G = null; show('lobby'); return renderLobby(); } return leaveRoom(); }

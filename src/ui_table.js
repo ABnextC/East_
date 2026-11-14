@@ -27,8 +27,9 @@ function load() { try { const t = localStorage.getItem('eic-save'); if (t) { con
 // 확장 「시대의 사건」 켜기(기본 켬). 새 게임부터 적용
 const evOn = () => { try { return localStorage.getItem('eic-events') !== '0'; } catch (e) { return true; } };
 function setEv(v) { try { localStorage.setItem('eic-events', v ? '1' : '0'); } catch (e) {} }
-const evOptHTML = () => `<label class="opt"><input type="checkbox" id="optev" ${evOn() ? 'checked' : ''}><span><b>확장: 시대의 사건</b><br><span class="hint">기간마다 그 시대의 사건 카드 1장이 공급·수요·항해비 등을 바꿉니다. 새 게임부터 적용</span></span></label>`;
-if (typeof document !== 'undefined' && document.addEventListener) document.addEventListener('change', e => { if (e.target && e.target.id === 'optev') setEv(e.target.checked); });
+const EV_DESC = '기간마다 그 시대의 사건 카드 1장이 공급·수요·항해비·주식 시장을 흔듭니다';
+const evOptHTML = (id = 'optev', on = evOn(), note = '혼자 테스트의 새 게임부터 적용') => `<label class="opt"><input type="checkbox" id="${id}" ${on ? 'checked' : ''}><span><b>확장: 시대의 사건</b><br><span class="hint">${EV_DESC}. ${note}</span></span></label>`;
+if (typeof document !== 'undefined' && document.addEventListener) document.addEventListener('change', e => { const t = e.target; if (!t) return; if (t.id === 'optev') setEv(t.checked); if (t.id === 'roomev') { setEv(t.checked); if (typeof roomSetEvents === 'function') roomSetEvents(t.checked); } });
 function newGame() { MODE = 'local'; G = createGame({ seed: Math.floor(Math.random() * 1e9), events: evOn() }); history = []; ui = {}; lastFocus = ''; save(); render(); }
 function trimLog(s) { if (s.log.length > 150) s.log = s.log.slice(-150); }
 function doAct(a) {
@@ -192,14 +193,14 @@ function drawCerts() {
     <path d="M${B.x + 40} ${B.y + 30} L${B.x + B.w / 2} ${B.y + 6} L${B.x + B.w - 40} ${B.y + 30}Z" fill="none" stroke="#a89c80"/>
     <circle cx="${B.x + B.w / 2}" cy="${B.y + 21}" r="9" fill="url(#gold)" stroke="#8a6412"/>${sTxt(B.x + B.w / 2, B.y + 25, '₤', { a: 'middle', s: 11, w: 700, f: '#4a3210' })}
     <rect x="${B.x - 4}" y="${B.y + 34}" width="${B.w + 8}" height="20" fill="#e2d9c2" stroke="#8a7f68"/>${sTxt(B.x + B.w / 2, B.y + 49, '증 권 거 래 소', { a: 'middle', s: 14, w: 700, f: '#3a3226', cls: 'disp' })}
-    ${sTxt(B.x + 12, B.y + 49, E.years.slice(0, 4), { s: 10, f: '#6e6450' })}${sTxt(B.x + B.w - 12, B.y + 49, buy ? '주식 1장 사기' : '', { a: 'end', s: 10, w: 700, f: '#8a3a12' })}
+    ${sTxt(B.x + 12, B.y + 49, E.years.slice(0, 4), { s: 10, f: '#6e6450' })}${exchEv(B)}${sTxt(B.x + B.w - 12, B.y + 49, buy ? '주식 1장 사기' : '', { a: 'end', s: 10, w: 700, f: '#8a3a12' })}
     <rect x="${B.x + 4}" y="${B.y + 58}" width="${B.w - 8}" height="${H - 76}" fill="#3a2e22" opacity=".18"/>`;
   for (let k = 0; k <= 4; k++) { const x = B.x + 4 + k * 120 + (k === 4 ? -12 : 0); s += `<rect x="${x}" y="${B.y + 58}" width="10" height="${H - 76}" fill="#efe9da" stroke="#a89c80"/><rect x="${x - 2}" y="${B.y + 56}" width="14" height="5" fill="#e2d9c2" stroke="#a89c80"/><path d="M${x + 3} ${B.y + 62}v${H - 84}M${x + 7} ${B.y + 62}v${H - 84}" stroke="#d2c8b2" stroke-width=".8"/>`; }
   s += `<rect x="${B.x - 4}" y="${B.y + H - 18}" width="${B.w + 8}" height="9" fill="#e2d9c2" stroke="#8a7f68"/><rect x="${B.x - 10}" y="${B.y + H - 9}" width="${B.w + 20}" height="9" fill="#d6ccb4" stroke="#8a7f68"/>`;
   G.players.forEach((pl, c) => {
     const x = B.x + 17 + c * 120, y = B.y + 62, ok = la.some(a => a.type === 'buyShare' && a.company === c), left = G.stock[c].inExchange;
     let stack = ''; for (let k = Math.min(left, 4) - 1; k >= 1; k--) stack += `<rect x="${k * 2.5}" y="${-k * 2.5}" width="104" height="86" rx="3" fill="#fffaf0" stroke="${PCOL[c]}" stroke-width="1.5"/>`;
-    s += `<g class="${ok ? 'hot' : ''}" ${ok ? actAttrs('buy', `data-c="${c}"`, `${pl.name} 주식 사기 ${price(G, c)}GP`) : ''} transform="translate(${x},${y})">${left ? stack + certArt(c, left, price(G, c)) : `<rect width="104" height="86" rx="3" fill="none" stroke="#8a7f68" stroke-dasharray="5 4"/>${sTxt(52, 48, '다 팔림', { a: 'middle', s: 12, f: '#6e6450' })}`}
+    s += `<g class="${ok ? 'hot' : ''}" ${ok ? actAttrs('buy', `data-c="${c}"`, `${pl.name} 주식 사기 ${buyCost(G, c)}GP`) : ''} transform="translate(${x},${y})">${left ? stack + certArt(c, left, price(G, c)) : `<rect width="104" height="86" rx="3" fill="none" stroke="#8a7f68" stroke-dasharray="5 4"/>${sTxt(52, 48, '다 팔림', { a: 'middle', s: 12, f: '#6e6450' })}`}
       ${ok ? '<rect class="hl" x="-4" y="-6" width="114" height="96" rx="5" fill="none" stroke="#ffd45e"/>' : ''}</g>`;
   });
   return s;
@@ -243,7 +244,7 @@ function drawMap() {
 
 // ---------- 확장: 시대의 사건 카드 ----------
 const sgnK = k => (k > 0 ? '+' : '−') + Math.abs(k);
-const EV_GOOD = { sup: 1, dem: 1, sale: 1, toll: -1, load: -1, ship: -1 }; // 플레이어에게 좋은 방향
+const EV_GOOD = { sup: 1, dem: 1, sale: 1, toll: -1, load: -1, ship: -1, stock: 1, buy: -1, div: 1 }; // 플레이어에게 좋은 방향
 function zoneEv(r, b) {
   const d = sailCost(G, r) - DATA.regions[r].sailCost, lm = evMod(G, 'load', r); let t = '';
   if (d) t += sTxt(b.w - 16 - 30, 30, `사건 ${sgnK(d)}`, { a: 'end', s: 10, w: 700, f: d > 0 ? '#a3321f' : '#2f6b3a' });
@@ -253,7 +254,14 @@ function zoneEv(r, b) {
 function evIcon(l) {
   if (l.kind === 'sup' || l.kind === 'dem' || l.kind === 'sale') return l.key === 'all' ? GOODS.map((g, i) => `<g transform="translate(${(i % 2) * 8},${Math.floor(i / 2) * 8 - 1})">${sCube(g, 7)}</g>`).join('') : `<g transform="translate(0,-1)">${sCube(l.key, 15)}</g>`;
   if (l.kind === 'ship') return `<g transform="translate(8,7) scale(.75)">${SICON.buyShip}</g>`;
+  if (l.kind === 'stock') return `<rect x="0" y="-1" width="16" height="16" rx="2" fill="#fffaf0" stroke="#3a2713"/><path d="${l.k > 0 ? 'M2.5 11.5l4-4 3 2.5 4-6M10 4h3.5v3.5' : 'M2.5 3.5l4 4 3-2.5 4 6M10 11h3.5V7.5'}" fill="none" stroke="${l.k > 0 ? '#2f6b3a' : '#a3321f'}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if (l.kind === 'buy') return `<rect x="1" y="0" width="15" height="14" rx="1.5" fill="#fffaf0" stroke="#3a2713"/><path d="M4 4h9M4 7h9M4 10h5" stroke="#3a2713" stroke-width="1"/>`;
+  if (l.kind === 'div') return sCoin(8, 7, 7.5, '₤');
   return `<circle cx="8" cy="7" r="7.5" fill="#3a2713"/>${sTxt(8, 10.6, l.key === 'all' ? '全' : l.key, { a: 'middle', s: l.key.length > 2 ? 7 : 9, w: 700, f: '#f1e4c2', cls: 'disp' })}`;
+}
+function exchEv(B) {
+  const b = evMod(G, 'buy', 'all'), d = evMod(G, 'div', 'all'), t = [b ? `살 때 ${sgnK(b)}GP` : '', d ? `배당 ${sgnK(d)}` : ''].filter(Boolean).join(' · ');
+  return t ? sTxt(B.x + 46, B.y + 49, '사건 ' + t, { s: 10, w: 700, f: b < 0 || d > 0 ? '#2f6b3a' : '#a3321f' }) : '';
 }
 function drawEventCard() {
   if (!(G.opts && G.opts.events)) return '';

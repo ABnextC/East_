@@ -52,7 +52,8 @@ const pname = (s, p) => s.players[p].name;
 
 // ---------- 확장: 시대의 사건 ----------
 // 기간마다 그 시대의 사건 카드 1장을 뽑아 그 기간 내내 적용한다.
-// sup 인도 공급(D), dem 유럽 수요(E), toll 항해비, load 적재 큐브당 값, sale 판매 큐브당 값, ship 배 값. all = 모두
+// sup 인도 공급(D), dem 유럽 수요(E), toll 항해비, load 적재 큐브당 값, sale 판매 큐브당 값, ship 배 값
+// stock 모든 주가 칸 이동(뽑는 즉시), buy 주식 살 때 1장 값, div 배당 주당 값. all = 모두
 export const EVENTS = [
   { id: 'e1a', era: 1, name: '정향 독점 단속', year: '1700년대', text: '회사가 몰루카 밖의 정향나무를 베어 냅니다', sup: { spice: -2 }, dem: { spice: 1 } },
   { id: 'e1b', era: 1, name: '말라카 해협의 해적', year: '1710년대', text: '해협을 지나는 배마다 호위가 붙습니다', toll: { II: 2 } },
@@ -60,30 +61,40 @@ export const EVENTS = [
   { id: 'e1d', era: 1, name: '순조로운 계절풍', year: '해마다', text: '몬순이 제때 불어 뱃길이 빨라집니다', toll: { all: -1 } },
   { id: 'e1e', era: 1, name: '무굴 계승 전쟁', year: '1707', text: '아우랑제브 사후 인도 내륙이 어지럽습니다', load: { III: 1 } },
   { id: 'e1f', era: 1, name: '광저우 상관 개설', year: '1715', text: '중국 남쪽 항구에서 차를 사들이기 시작합니다', sup: { tea: 2 } },
+  { id: 'e1g', era: 1, name: '미시시피 투기 열풍', year: '1719', text: '파리에서 회사 주식 값이 스무 배로 뜁니다', stock: { all: 2 } },
+  { id: 'e1h', era: 1, name: '남해 거품 붕괴', year: '1720', text: '투기로 부풀었던 주가가 한꺼번에 꺼집니다', stock: { all: -2 } },
   { id: 'e2a', era: 2, name: '플라시 전투', year: '1757', text: '회사가 벵골의 세금을 거두게 됩니다', load: { III: -1 } },
   { id: 'e2b', era: 2, name: '7년 전쟁의 사략선', year: '1756–1763', text: '적국 사략선이 인도양을 휘젓습니다', toll: { all: 1 } },
   { id: 'e2c', era: 2, name: '차 감세법', year: '1784', text: '차 관세가 119%에서 12.5%로 내려갑니다', dem: { tea: 3 } },
   { id: 'e2d', era: 2, name: '광저우 일구통상', year: '1757', text: '청이 서양 무역을 광저우 한 곳으로 묶습니다', toll: { I: 1 }, sup: { silk: -1 } },
   { id: 'e2e', era: 2, name: '벵골 대기근', year: '1770', text: '흉년과 세금으로 벵골 인구가 크게 줄어듭니다', sup: { all: -1 } },
   { id: 'e2f', era: 2, name: '보스턴 차 사건', year: '1773', text: '식민지 사람들이 회사의 차를 거부합니다', dem: { tea: -2 } },
+  { id: 'e2g', era: 2, name: '1772년 신용 공황', year: '1772', text: '은행들이 연달아 무너지고 주식이 헐값이 됩니다', stock: { all: -1 }, buy: { all: -1 } },
+  { id: 'e2h', era: 2, name: '규제법', year: '1773', text: '의회가 구제 대출을 해 주며 배당을 묶습니다', div: { all: -1 } },
   { id: 'e3a', era: 3, name: '대륙 봉쇄령', year: '1806', text: '나폴레옹이 유럽 항구를 영국 배에 닫습니다', dem: { all: -1 } },
   { id: 'e3b', era: 3, name: '인도 무역 독점 폐지', year: '1813', text: '누구나 인도와 무역할 수 있게 됩니다', sup: { all: 1 } },
   { id: 'e3c', era: 3, name: '싱가포르 자유항', year: '1819', text: '관세 없는 항구가 해협 끝에 열립니다', toll: { II: -1 }, load: { II: -1 } },
   { id: 'e3d', era: 3, name: '자와 강제 재배 제도', year: '1830', text: '농민에게 커피를 의무로 심게 합니다', sup: { coffee: 3 } },
   { id: 'e3e', era: 3, name: '여름 없는 해', year: '1816', text: '탐보라 화산재가 하늘을 덮습니다', toll: { II: 1 }, sup: { coffee: -2 } },
   { id: 'e3f', era: 3, name: '린쩌쉬의 아편 단속', year: '1839', text: '광저우 앞바다가 봉쇄됩니다', toll: { I: 2 } },
+  { id: 'e3g', era: 3, name: '런던 증권거래소 출범', year: '1801', text: '회원제 거래소가 문을 열고 거래가 쉬워집니다', buy: { all: -1 } },
+  { id: 'e3h', era: 3, name: '1825년 공황', year: '1825', text: '남미 광산주 거품이 꺼지고 은행이 문을 닫습니다', stock: { all: -2 } },
   { id: 'e4a', era: 4, name: '난징 조약', year: '1842', text: '다섯 항구가 열리고 홍콩이 넘어갑니다', toll: { I: -1 }, sup: { tea: 1, silk: 1 } },
   { id: 'e4b', era: 4, name: '차 경주 열기', year: '1866', text: '첫 햇차를 런던에 가장 먼저 대는 배에 웃돈', sale: { tea: 1 } },
   { id: 'e4c', era: 4, name: '세포이 항쟁', year: '1857', text: '북인도 곳곳에서 반란이 일어납니다', toll: { III: 2 } },
   { id: 'e4d', era: 4, name: '유럽 누에 전염병', year: '1850년대', text: '프랑스와 이탈리아의 누에가 병으로 죽습니다', dem: { silk: 3 } },
   { id: 'e4e', era: 4, name: '실론 커피 대농장', year: '1840년대', text: '산비탈이 커피밭으로 바뀝니다', sup: { coffee: 2 } },
   { id: 'e4f', era: 4, name: '크림 전쟁 수송 징발', year: '1854', text: '나라가 상선을 군 수송선으로 빌려 갑니다', ship: { all: 1 } },
+  { id: 'e4g', era: 4, name: '철도 투기 열풍', year: '1845', text: '철도주를 사려는 줄이 거래소 밖까지 늘어섭니다', stock: { all: 1 }, buy: { all: 1 } },
+  { id: 'e4h', era: 4, name: '유한책임법', year: '1855', text: '주주는 낸 돈만큼만 책임지게 됩니다', div: { all: 1 } },
   { id: 'e5a', era: 5, name: '수에즈 운하 통행료', year: '1869', text: '지름길이 열렸지만 통행료가 비쌉니다', toll: { all: 1 } },
   { id: 'e5b', era: 5, name: '해저 전신 개통', year: '1870', text: '런던 시세가 하루 만에 봄베이에 닿습니다', dem: { all: 1 } },
   { id: 'e5c', era: 5, name: '실론 커피 녹병', year: '1869~', text: '잎마름병이 커피밭을 휩씁니다', sup: { coffee: -3 }, dem: { coffee: 1 } },
   { id: 'e5d', era: 5, name: '아삼·실론 차 농장', year: '1880년대', text: '인도와 실론의 차가 중국 차를 앞지릅니다', sup: { tea: 3 } },
   { id: 'e5e', era: 5, name: '1873년 공황', year: '1873', text: '유럽 증시가 무너지고 불황이 이어집니다', dem: { all: -1 } },
   { id: 'e5f', era: 5, name: '증기선 조선 붐', year: '1880년대', text: '철선 조선소가 앞다투어 배를 찍어 냅니다', ship: { all: -1 } },
+  { id: 'e5g', era: 5, name: '베어링 위기', year: '1890', text: '큰 은행이 아르헨티나 채권으로 흔들립니다', stock: { all: -2 } },
+  { id: 'e5h', era: 5, name: '소액 투자자 열풍', year: '1880년대', text: '사무원과 과부까지 주식을 사 모읍니다', stock: { all: 1 }, div: { all: 1 } },
 ];
 const EV = Object.fromEntries(EVENTS.map(e => [e.id, e]));
 export const eventOf = s => (s.opts && s.opts.events && s.event ? EV[s.event] : null);
@@ -91,6 +102,8 @@ export const eventOf = s => (s.opts && s.opts.events && s.event ? EV[s.event] : 
 export const evMod = (s, kind, key) => { const e = eventOf(s); if (!e || !e[kind]) return 0; return (e[kind][key] || 0) + (key !== 'all' ? e[kind].all || 0 : 0); };
 export const sailCost = (s, r) => Math.max(0, DATA.regions[r].sailCost + evMod(s, 'toll', r));
 export const shipCost = (s, t) => Math.max(0, SHIP[t].cost + evMod(s, 'ship', 'all'));
+export const buyCost = (s, c) => Math.max(1, DATA.stockTrack.prices[s.stock[c].idx] + evMod(s, 'buy', 'all'));
+const divPer = (s, c) => Math.max(0, DATA.stockTrack.dividends[s.stock[c].idx] + evMod(s, 'div', 'all'));
 const sgn = k => (k > 0 ? '+' : '−') + Math.abs(k);
 export function eventLines(e) {
   const out = [], gk = g => (g === 'all' ? '모든 상품' : GOOD_KO[g]), rk = r => (r === 'all' ? '모든 지역' : DATA.regions[r].name);
@@ -100,12 +113,16 @@ export function eventLines(e) {
   for (const [r, k] of Object.entries(e.load || {})) out.push({ kind: 'load', key: r, k, t: `${rk(r)}에서 살 때 큐브당 ${sgn(k)}GP` });
   for (const [g, k] of Object.entries(e.sale || {})) out.push({ kind: 'sale', key: g, k, t: `유럽에 ${gk(g)} 팔 때 큐브당 ${sgn(k)}GP` });
   for (const [, k] of Object.entries(e.ship || {})) out.push({ kind: 'ship', key: 'all', k, t: `배 값 ${sgn(k)}GP` });
+  for (const [, k] of Object.entries(e.stock || {})) out.push({ kind: 'stock', key: 'all', k, t: `모든 주가 ${sgn(k)}칸 (곧바로)` });
+  for (const [, k] of Object.entries(e.buy || {})) out.push({ kind: 'buy', key: 'all', k, t: `주식 살 때 1장당 ${sgn(k)}GP` });
+  for (const [, k] of Object.entries(e.div || {})) out.push({ kind: 'div', key: 'all', k, t: `배당 주당 ${sgn(k)}GP` });
   return out;
 }
 function drawEvent(s) {
   const deck = EVENTS.filter(e => e.era === s.period);
   const e = deck[rint(s, deck.length)]; s.event = e.id;
   log(s, `시대의 사건 — ${e.name}(${e.year}): ${eventLines(e).map(x => x.t).join(', ')}`);
+  if (e.stock) { for (let c = 0; c < N(s); c++) moveStock(s, c, e.stock.all || 0); log(s, `주가 — ${s.players.map((pl, c) => `${pl.name} ${price(s, c)}`).join(', ')}`); }
 }
 
 export function createGame({ seed = 1, names = ['빨강', '파랑', '노랑', '회색'], events = false } = {}) {
@@ -279,7 +296,7 @@ function endPeriod(s) {
     for (const pl of s.players) { pl.treasury += pl.sales; pl.sales = 0; settle(s, pl); }
     sub.pay = [];
     for (const c of s.initiative) {
-      const dv = dividend(s, c); if (!dv) continue;
+      const dv = divPer(s, c); if (!dv) continue;
       for (const h of s.initiative) if (h !== c && s.players[h].shares[c]) sub.pay.push({ c, h, amt: dv * s.players[h].shares[c] });
     }
     sub.step = 'div'; sub.i = 0;
@@ -383,7 +400,7 @@ export function legalActions(s) {
     if (!pl.agents.some(a => a.at == null)) add({ type: 'passA', label: '중앙 요원을 그대로 두고 마침' });
   }
   if (aw.type === 'stock') {
-    s.stock.forEach((st, c) => { if (st.inExchange > 0 && pl.treasury >= price(s, c)) add({ type: 'buyShare', company: c, label: `${pname(s, c)} 주식 1장 구매 (${price(s, c)}GP)` }); });
+    s.stock.forEach((st, c) => { if (st.inExchange > 0 && pl.treasury >= buyCost(s, c)) add({ type: 'buyShare', company: c, label: `${pname(s, c)} 주식 1장 구매 (${buyCost(s, c)}GP)` }); });
     add({ type: 'pass', label: '패스' });
   }
   if (aw.type === 'chooseCard') {
@@ -461,7 +478,7 @@ export function apply(s, action) {
     log(s, `${pl.name}: ${a.label}`); nextTurn();
   } else if (a.type === 'passA') { pl.doneA = true; nextTurn(); }
   else if (a.type === 'buyShare') {
-    pl.treasury -= price(s, a.company); pl.shares[a.company]++; s.stock[a.company].inExchange--; moveStock(s, a.company, 1);
+    pl.treasury -= buyCost(s, a.company); pl.shares[a.company]++; s.stock[a.company].inExchange--; moveStock(s, a.company, 1);
     s.sub.passes = 0; log(s, `${pl.name}: ${pname(s, a.company)} 주식 구매 → 주가 ${price(s, a.company)}`); nextTurn();
   } else if (a.type === 'pass') { s.sub.passes++; nextTurn(); }
   else if (a.type === 'chooseCard') {

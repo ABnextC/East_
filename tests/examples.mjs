@@ -58,3 +58,18 @@ console.log('examples ok');
   const a = createGame({ seed: 9 }); if (JSON.stringify(a.dice) !== JSON.stringify(createGame({ seed: 9, events: false }).dice)) throw new Error('base changed');
   console.log('events ok');
 }
+
+// 주식 시장 사건
+{
+  const { eventOf, buyCost, eventLines, EVENTS } = await import('../src/engine.js');
+  if (EVENTS.filter(e => e.stock || e.buy || e.div).length < 10) throw new Error('stock events');
+  // 남해 거품: 뽑자마자 모든 주가 −2칸
+  let found = null;
+  for (let seed = 1; seed < 400 && !found; seed++) { const s = createGame({ seed, events: true }); if (s.event === 'e1h' || s.event === 'e1g') found = s; }
+  if (!found) throw new Error('no bubble seed');
+  const want = found.event === "e1g" ? 2 : -2, base = want; // 시작 칸(0)에서 이동
+  for (let c = 0; c < 4; c++) if (found.stock[c].idx !== Math.max(0, base)) throw new Error('stock move ' + found.stock[c].idx);
+  found.event = 'e3g'; if (buyCost(found, 0) !== Math.max(1, price(found, 0) - 1)) throw new Error('buy cost');
+  if (!eventLines(EVENTS.find(e => e.id === 'e2h')).some(l => l.kind === 'div')) throw new Error('div line');
+  console.log('stock events ok');
+}

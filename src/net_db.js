@@ -33,8 +33,8 @@ function renderLobby() {
       <label class="fld" for="code">방 코드로 들어가기</label>
       <div class="row"><input id="code" maxlength="4" placeholder="ABCD" ${online ? '' : 'disabled'}><button type="button" data-l="joincode" ${online ? '' : 'disabled'}>들어가기</button></div>
       ${online ? `<h3>최근 방</h3>${rooms ? `<ul class="rooms">${rooms}</ul>` : '<p class="hint">아직 만든 방이 없어요.</p>'}` : ''}
-${evOptHTML()}
-      <hr><div class="row"><button type="button" data-l="local">혼자 4자리 테스트</button><span class="hint">한 기기에서 네 자리를 번갈아 조작합니다.</span></div>`;
+      <hr><div class="row"><button type="button" data-l="local">혼자 4자리 테스트</button><span class="hint">한 기기에서 네 자리를 번갈아 조작합니다.</span></div>
+      ${evOptHTML()}`;
     return;
   }
   if (!d) { el.innerHTML = `<p>방 ${esc(NET.code)} 불러오는 중…</p><button type="button" data-l="back">나가기</button>`; return; }
@@ -47,7 +47,7 @@ ${evOptHTML()}
   el.innerHTML = `<h2>방 <span class="code">${esc(NET.code)}</span></h2>
     <p class="hint">친구에게 이 페이지 주소와 방 코드 <b>${esc(NET.code)}</b>를 알려 주세요. 주소 끝이 #r-${esc(NET.code)}이면 바로 이 방으로 들어옵니다.</p>
     <div class="seats">${seats}</div>
-    <p class="hint">규칙: ${d.events ? '<b>확장 「시대의 사건」 켬</b>' : '기본 규칙(확장 없음)'}</p>
+    ${d.host === NET.uid ? evOptHTML('roomev', !!d.events, '방장만 바꿀 수 있어요') : `<p class="hint">규칙: ${d.events ? '<b>확장 「시대의 사건」 켬</b>' : '기본 규칙(확장 없음)'} · 방장이 정합니다</p>`}
     <p class="hint">한 사람이 여러 자리에 앉아도 됩니다. 네 자리가 다 차야 시작할 수 있어요.</p>
     <div class="row"><button type="button" class="go" data-l="start" ${full && seated ? '' : 'disabled'}>게임 시작</button><button type="button" data-l="back">방에서 나가기</button></div>`;
 }
@@ -110,7 +110,7 @@ async function createRoom() {
     const code = Array.from({ length: 4 }, () => CODE_CH[Math.floor(Math.random() * CODE_CH.length)]).join('');
     const ref = NET.db.doc('games/' + code);
     const snap = await ref.get(); if (snap.exists) continue;
-    await ref.set({ status: 'lobby', seats: [{ uid: NET.uid, name }, null, null, null], seated: 1, ver: 0, period: 0, at: Date.now(), events: evOn() });
+    await ref.set({ status: 'lobby', seats: [{ uid: NET.uid, name }, null, null, null], seated: 1, ver: 0, period: 0, at: Date.now(), events: evOn(), host: NET.uid });
     openRoom(code); return;
   }
   toast('방 코드를 만들지 못했어요. 다시 눌러 주세요');
@@ -131,6 +131,9 @@ async function startGame() {
     const g = createGame({ seed: Math.floor(Math.random() * 1e9), names: d.seats.map(s => s.name), events: !!d.events });
     await NET.ref.update({ status: 'playing', state: JSON.stringify(g), ver: 1, period: 1, prev: null, prevBy: null, at: Date.now() });
   });
+}
+async function roomSetEvents(v) {
+  await withLease(async d => { if (!d || d.status !== 'lobby' || d.host !== NET.uid) return; await NET.ref.update({ events: !!v, at: Date.now() }); });
 }
 async function lobbyClick(b) {
   const l = b.dataset.l;

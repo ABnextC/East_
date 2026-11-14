@@ -40,7 +40,13 @@ const tick = (n = 3) => new Promise(r => { let k = 0; const f = () => (++k >= n 
   await B.press('data-l="joincode"'); await tick(8);
   await B.press('data-l="sit" data-i="2"'); await tick(5); await B.press('data-l="sit" data-i="3"'); await tick(5);
   console.log('seats', JSON.stringify(A.st().NET.room.seats.map(s => s && s.name)), 'B sees', JSON.stringify(B.st().NET.room && B.st().NET.room.seats.map(s => s && s.name)));
+  // 확장은 방장만 바꿀 수 있다
+  A.ctx.roomSetEvents(false); await tick(5); const offB = B.st().NET.room.events;
+  B.ctx.send({ t: 'opt', events: true }); await tick(5); const stillOff = A.st().NET.H.room.events;
+  A.ctx.roomSetEvents(true); await tick(5);
+  console.log('expansion host-only', offB === false && stillOff === false && B.st().NET.room.events === true);
   await B.press('data-l="start"'); await tick(8);
+  console.log('game has events', A.st().NET.H.full.opts.events === true, 'guest sees event', !!B.st().G.event);
   console.log('A mine', [...A.st().mine], 'B mine', [...B.st().mine], 'B has rng?', B.st().G.rng);
   let r = 7, clicks = 0, leakChecks = 0, guestShipHidden = 0;
   const rr = () => { r = (r * 1103515245 + 12345) & 0x7fffffff; return r / 0x7fffffff; };

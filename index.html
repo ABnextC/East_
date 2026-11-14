@@ -285,7 +285,8 @@ const pname = (s, p) => s.players[p].name;
 
 // ---------- 확장: 시대의 사건 ----------
 // 기간마다 그 시대의 사건 카드 1장을 뽑아 그 기간 내내 적용한다.
-// sup 인도 공급(D), dem 유럽 수요(E), toll 항해비, load 적재 큐브당 값, sale 판매 큐브당 값, ship 배 값. all = 모두
+// sup 인도 공급(D), dem 유럽 수요(E), toll 항해비, load 적재 큐브당 값, sale 판매 큐브당 값, ship 배 값
+// stock 모든 주가 칸 이동(뽑는 즉시), buy 주식 살 때 1장 값, div 배당 주당 값. all = 모두
 const EVENTS = [
   { id: 'e1a', era: 1, name: '정향 독점 단속', year: '1700년대', text: '회사가 몰루카 밖의 정향나무를 베어 냅니다', sup: { spice: -2 }, dem: { spice: 1 } },
   { id: 'e1b', era: 1, name: '말라카 해협의 해적', year: '1710년대', text: '해협을 지나는 배마다 호위가 붙습니다', toll: { II: 2 } },
@@ -293,30 +294,40 @@ const EVENTS = [
   { id: 'e1d', era: 1, name: '순조로운 계절풍', year: '해마다', text: '몬순이 제때 불어 뱃길이 빨라집니다', toll: { all: -1 } },
   { id: 'e1e', era: 1, name: '무굴 계승 전쟁', year: '1707', text: '아우랑제브 사후 인도 내륙이 어지럽습니다', load: { III: 1 } },
   { id: 'e1f', era: 1, name: '광저우 상관 개설', year: '1715', text: '중국 남쪽 항구에서 차를 사들이기 시작합니다', sup: { tea: 2 } },
+  { id: 'e1g', era: 1, name: '미시시피 투기 열풍', year: '1719', text: '파리에서 회사 주식 값이 스무 배로 뜁니다', stock: { all: 2 } },
+  { id: 'e1h', era: 1, name: '남해 거품 붕괴', year: '1720', text: '투기로 부풀었던 주가가 한꺼번에 꺼집니다', stock: { all: -2 } },
   { id: 'e2a', era: 2, name: '플라시 전투', year: '1757', text: '회사가 벵골의 세금을 거두게 됩니다', load: { III: -1 } },
   { id: 'e2b', era: 2, name: '7년 전쟁의 사략선', year: '1756–1763', text: '적국 사략선이 인도양을 휘젓습니다', toll: { all: 1 } },
   { id: 'e2c', era: 2, name: '차 감세법', year: '1784', text: '차 관세가 119%에서 12.5%로 내려갑니다', dem: { tea: 3 } },
   { id: 'e2d', era: 2, name: '광저우 일구통상', year: '1757', text: '청이 서양 무역을 광저우 한 곳으로 묶습니다', toll: { I: 1 }, sup: { silk: -1 } },
   { id: 'e2e', era: 2, name: '벵골 대기근', year: '1770', text: '흉년과 세금으로 벵골 인구가 크게 줄어듭니다', sup: { all: -1 } },
   { id: 'e2f', era: 2, name: '보스턴 차 사건', year: '1773', text: '식민지 사람들이 회사의 차를 거부합니다', dem: { tea: -2 } },
+  { id: 'e2g', era: 2, name: '1772년 신용 공황', year: '1772', text: '은행들이 연달아 무너지고 주식이 헐값이 됩니다', stock: { all: -1 }, buy: { all: -1 } },
+  { id: 'e2h', era: 2, name: '규제법', year: '1773', text: '의회가 구제 대출을 해 주며 배당을 묶습니다', div: { all: -1 } },
   { id: 'e3a', era: 3, name: '대륙 봉쇄령', year: '1806', text: '나폴레옹이 유럽 항구를 영국 배에 닫습니다', dem: { all: -1 } },
   { id: 'e3b', era: 3, name: '인도 무역 독점 폐지', year: '1813', text: '누구나 인도와 무역할 수 있게 됩니다', sup: { all: 1 } },
   { id: 'e3c', era: 3, name: '싱가포르 자유항', year: '1819', text: '관세 없는 항구가 해협 끝에 열립니다', toll: { II: -1 }, load: { II: -1 } },
   { id: 'e3d', era: 3, name: '자와 강제 재배 제도', year: '1830', text: '농민에게 커피를 의무로 심게 합니다', sup: { coffee: 3 } },
   { id: 'e3e', era: 3, name: '여름 없는 해', year: '1816', text: '탐보라 화산재가 하늘을 덮습니다', toll: { II: 1 }, sup: { coffee: -2 } },
   { id: 'e3f', era: 3, name: '린쩌쉬의 아편 단속', year: '1839', text: '광저우 앞바다가 봉쇄됩니다', toll: { I: 2 } },
+  { id: 'e3g', era: 3, name: '런던 증권거래소 출범', year: '1801', text: '회원제 거래소가 문을 열고 거래가 쉬워집니다', buy: { all: -1 } },
+  { id: 'e3h', era: 3, name: '1825년 공황', year: '1825', text: '남미 광산주 거품이 꺼지고 은행이 문을 닫습니다', stock: { all: -2 } },
   { id: 'e4a', era: 4, name: '난징 조약', year: '1842', text: '다섯 항구가 열리고 홍콩이 넘어갑니다', toll: { I: -1 }, sup: { tea: 1, silk: 1 } },
   { id: 'e4b', era: 4, name: '차 경주 열기', year: '1866', text: '첫 햇차를 런던에 가장 먼저 대는 배에 웃돈', sale: { tea: 1 } },
   { id: 'e4c', era: 4, name: '세포이 항쟁', year: '1857', text: '북인도 곳곳에서 반란이 일어납니다', toll: { III: 2 } },
   { id: 'e4d', era: 4, name: '유럽 누에 전염병', year: '1850년대', text: '프랑스와 이탈리아의 누에가 병으로 죽습니다', dem: { silk: 3 } },
   { id: 'e4e', era: 4, name: '실론 커피 대농장', year: '1840년대', text: '산비탈이 커피밭으로 바뀝니다', sup: { coffee: 2 } },
   { id: 'e4f', era: 4, name: '크림 전쟁 수송 징발', year: '1854', text: '나라가 상선을 군 수송선으로 빌려 갑니다', ship: { all: 1 } },
+  { id: 'e4g', era: 4, name: '철도 투기 열풍', year: '1845', text: '철도주를 사려는 줄이 거래소 밖까지 늘어섭니다', stock: { all: 1 }, buy: { all: 1 } },
+  { id: 'e4h', era: 4, name: '유한책임법', year: '1855', text: '주주는 낸 돈만큼만 책임지게 됩니다', div: { all: 1 } },
   { id: 'e5a', era: 5, name: '수에즈 운하 통행료', year: '1869', text: '지름길이 열렸지만 통행료가 비쌉니다', toll: { all: 1 } },
   { id: 'e5b', era: 5, name: '해저 전신 개통', year: '1870', text: '런던 시세가 하루 만에 봄베이에 닿습니다', dem: { all: 1 } },
   { id: 'e5c', era: 5, name: '실론 커피 녹병', year: '1869~', text: '잎마름병이 커피밭을 휩씁니다', sup: { coffee: -3 }, dem: { coffee: 1 } },
   { id: 'e5d', era: 5, name: '아삼·실론 차 농장', year: '1880년대', text: '인도와 실론의 차가 중국 차를 앞지릅니다', sup: { tea: 3 } },
   { id: 'e5e', era: 5, name: '1873년 공황', year: '1873', text: '유럽 증시가 무너지고 불황이 이어집니다', dem: { all: -1 } },
   { id: 'e5f', era: 5, name: '증기선 조선 붐', year: '1880년대', text: '철선 조선소가 앞다투어 배를 찍어 냅니다', ship: { all: -1 } },
+  { id: 'e5g', era: 5, name: '베어링 위기', year: '1890', text: '큰 은행이 아르헨티나 채권으로 흔들립니다', stock: { all: -2 } },
+  { id: 'e5h', era: 5, name: '소액 투자자 열풍', year: '1880년대', text: '사무원과 과부까지 주식을 사 모읍니다', stock: { all: 1 }, div: { all: 1 } },
 ];
 const EV = Object.fromEntries(EVENTS.map(e => [e.id, e]));
 const eventOf = s => (s.opts && s.opts.events && s.event ? EV[s.event] : null);
@@ -324,6 +335,8 @@ const eventOf = s => (s.opts && s.opts.events && s.event ? EV[s.event] : null);
 const evMod = (s, kind, key) => { const e = eventOf(s); if (!e || !e[kind]) return 0; return (e[kind][key] || 0) + (key !== 'all' ? e[kind].all || 0 : 0); };
 const sailCost = (s, r) => Math.max(0, DATA.regions[r].sailCost + evMod(s, 'toll', r));
 const shipCost = (s, t) => Math.max(0, SHIP[t].cost + evMod(s, 'ship', 'all'));
+const buyCost = (s, c) => Math.max(1, DATA.stockTrack.prices[s.stock[c].idx] + evMod(s, 'buy', 'all'));
+const divPer = (s, c) => Math.max(0, DATA.stockTrack.dividends[s.stock[c].idx] + evMod(s, 'div', 'all'));
 const sgn = k => (k > 0 ? '+' : '−') + Math.abs(k);
 function eventLines(e) {
   const out = [], gk = g => (g === 'all' ? '모든 상품' : GOOD_KO[g]), rk = r => (r === 'all' ? '모든 지역' : DATA.regions[r].name);
@@ -333,12 +346,16 @@ function eventLines(e) {
   for (const [r, k] of Object.entries(e.load || {})) out.push({ kind: 'load', key: r, k, t: `${rk(r)}에서 살 때 큐브당 ${sgn(k)}GP` });
   for (const [g, k] of Object.entries(e.sale || {})) out.push({ kind: 'sale', key: g, k, t: `유럽에 ${gk(g)} 팔 때 큐브당 ${sgn(k)}GP` });
   for (const [, k] of Object.entries(e.ship || {})) out.push({ kind: 'ship', key: 'all', k, t: `배 값 ${sgn(k)}GP` });
+  for (const [, k] of Object.entries(e.stock || {})) out.push({ kind: 'stock', key: 'all', k, t: `모든 주가 ${sgn(k)}칸 (곧바로)` });
+  for (const [, k] of Object.entries(e.buy || {})) out.push({ kind: 'buy', key: 'all', k, t: `주식 살 때 1장당 ${sgn(k)}GP` });
+  for (const [, k] of Object.entries(e.div || {})) out.push({ kind: 'div', key: 'all', k, t: `배당 주당 ${sgn(k)}GP` });
   return out;
 }
 function drawEvent(s) {
   const deck = EVENTS.filter(e => e.era === s.period);
   const e = deck[rint(s, deck.length)]; s.event = e.id;
   log(s, `시대의 사건 — ${e.name}(${e.year}): ${eventLines(e).map(x => x.t).join(', ')}`);
+  if (e.stock) { for (let c = 0; c < N(s); c++) moveStock(s, c, e.stock.all || 0); log(s, `주가 — ${s.players.map((pl, c) => `${pl.name} ${price(s, c)}`).join(', ')}`); }
 }
 
 function createGame({ seed = 1, names = ['빨강', '파랑', '노랑', '회색'], events = false } = {}) {
@@ -512,7 +529,7 @@ function endPeriod(s) {
     for (const pl of s.players) { pl.treasury += pl.sales; pl.sales = 0; settle(s, pl); }
     sub.pay = [];
     for (const c of s.initiative) {
-      const dv = dividend(s, c); if (!dv) continue;
+      const dv = divPer(s, c); if (!dv) continue;
       for (const h of s.initiative) if (h !== c && s.players[h].shares[c]) sub.pay.push({ c, h, amt: dv * s.players[h].shares[c] });
     }
     sub.step = 'div'; sub.i = 0;
@@ -616,7 +633,7 @@ function legalActions(s) {
     if (!pl.agents.some(a => a.at == null)) add({ type: 'passA', label: '중앙 요원을 그대로 두고 마침' });
   }
   if (aw.type === 'stock') {
-    s.stock.forEach((st, c) => { if (st.inExchange > 0 && pl.treasury >= price(s, c)) add({ type: 'buyShare', company: c, label: `${pname(s, c)} 주식 1장 구매 (${price(s, c)}GP)` }); });
+    s.stock.forEach((st, c) => { if (st.inExchange > 0 && pl.treasury >= buyCost(s, c)) add({ type: 'buyShare', company: c, label: `${pname(s, c)} 주식 1장 구매 (${buyCost(s, c)}GP)` }); });
     add({ type: 'pass', label: '패스' });
   }
   if (aw.type === 'chooseCard') {
@@ -694,7 +711,7 @@ function apply(s, action) {
     log(s, `${pl.name}: ${a.label}`); nextTurn();
   } else if (a.type === 'passA') { pl.doneA = true; nextTurn(); }
   else if (a.type === 'buyShare') {
-    pl.treasury -= price(s, a.company); pl.shares[a.company]++; s.stock[a.company].inExchange--; moveStock(s, a.company, 1);
+    pl.treasury -= buyCost(s, a.company); pl.shares[a.company]++; s.stock[a.company].inExchange--; moveStock(s, a.company, 1);
     s.sub.passes = 0; log(s, `${pl.name}: ${pname(s, a.company)} 주식 구매 → 주가 ${price(s, a.company)}`); nextTurn();
   } else if (a.type === 'pass') { s.sub.passes++; nextTurn(); }
   else if (a.type === 'chooseCard') {
@@ -774,8 +791,9 @@ function load() { try { const t = localStorage.getItem('eic-save'); if (t) { con
 // 확장 「시대의 사건」 켜기(기본 켬). 새 게임부터 적용
 const evOn = () => { try { return localStorage.getItem('eic-events') !== '0'; } catch (e) { return true; } };
 function setEv(v) { try { localStorage.setItem('eic-events', v ? '1' : '0'); } catch (e) {} }
-const evOptHTML = () => `<label class="opt"><input type="checkbox" id="optev" ${evOn() ? 'checked' : ''}><span><b>확장: 시대의 사건</b><br><span class="hint">기간마다 그 시대의 사건 카드 1장이 공급·수요·항해비 등을 바꿉니다. 새 게임부터 적용</span></span></label>`;
-if (typeof document !== 'undefined' && document.addEventListener) document.addEventListener('change', e => { if (e.target && e.target.id === 'optev') setEv(e.target.checked); });
+const EV_DESC = '기간마다 그 시대의 사건 카드 1장이 공급·수요·항해비·주식 시장을 흔듭니다';
+const evOptHTML = (id = 'optev', on = evOn(), note = '혼자 테스트의 새 게임부터 적용') => `<label class="opt"><input type="checkbox" id="${id}" ${on ? 'checked' : ''}><span><b>확장: 시대의 사건</b><br><span class="hint">${EV_DESC}. ${note}</span></span></label>`;
+if (typeof document !== 'undefined' && document.addEventListener) document.addEventListener('change', e => { const t = e.target; if (!t) return; if (t.id === 'optev') setEv(t.checked); if (t.id === 'roomev') { setEv(t.checked); if (typeof roomSetEvents === 'function') roomSetEvents(t.checked); } });
 function newGame() { MODE = 'local'; G = createGame({ seed: Math.floor(Math.random() * 1e9), events: evOn() }); history = []; ui = {}; lastFocus = ''; save(); render(); }
 function trimLog(s) { if (s.log.length > 150) s.log = s.log.slice(-150); }
 function doAct(a) {
@@ -939,14 +957,14 @@ function drawCerts() {
     <path d="M${B.x + 40} ${B.y + 30} L${B.x + B.w / 2} ${B.y + 6} L${B.x + B.w - 40} ${B.y + 30}Z" fill="none" stroke="#a89c80"/>
     <circle cx="${B.x + B.w / 2}" cy="${B.y + 21}" r="9" fill="url(#gold)" stroke="#8a6412"/>${sTxt(B.x + B.w / 2, B.y + 25, '₤', { a: 'middle', s: 11, w: 700, f: '#4a3210' })}
     <rect x="${B.x - 4}" y="${B.y + 34}" width="${B.w + 8}" height="20" fill="#e2d9c2" stroke="#8a7f68"/>${sTxt(B.x + B.w / 2, B.y + 49, '증 권 거 래 소', { a: 'middle', s: 14, w: 700, f: '#3a3226', cls: 'disp' })}
-    ${sTxt(B.x + 12, B.y + 49, E.years.slice(0, 4), { s: 10, f: '#6e6450' })}${sTxt(B.x + B.w - 12, B.y + 49, buy ? '주식 1장 사기' : '', { a: 'end', s: 10, w: 700, f: '#8a3a12' })}
+    ${sTxt(B.x + 12, B.y + 49, E.years.slice(0, 4), { s: 10, f: '#6e6450' })}${exchEv(B)}${sTxt(B.x + B.w - 12, B.y + 49, buy ? '주식 1장 사기' : '', { a: 'end', s: 10, w: 700, f: '#8a3a12' })}
     <rect x="${B.x + 4}" y="${B.y + 58}" width="${B.w - 8}" height="${H - 76}" fill="#3a2e22" opacity=".18"/>`;
   for (let k = 0; k <= 4; k++) { const x = B.x + 4 + k * 120 + (k === 4 ? -12 : 0); s += `<rect x="${x}" y="${B.y + 58}" width="10" height="${H - 76}" fill="#efe9da" stroke="#a89c80"/><rect x="${x - 2}" y="${B.y + 56}" width="14" height="5" fill="#e2d9c2" stroke="#a89c80"/><path d="M${x + 3} ${B.y + 62}v${H - 84}M${x + 7} ${B.y + 62}v${H - 84}" stroke="#d2c8b2" stroke-width=".8"/>`; }
   s += `<rect x="${B.x - 4}" y="${B.y + H - 18}" width="${B.w + 8}" height="9" fill="#e2d9c2" stroke="#8a7f68"/><rect x="${B.x - 10}" y="${B.y + H - 9}" width="${B.w + 20}" height="9" fill="#d6ccb4" stroke="#8a7f68"/>`;
   G.players.forEach((pl, c) => {
     const x = B.x + 17 + c * 120, y = B.y + 62, ok = la.some(a => a.type === 'buyShare' && a.company === c), left = G.stock[c].inExchange;
     let stack = ''; for (let k = Math.min(left, 4) - 1; k >= 1; k--) stack += `<rect x="${k * 2.5}" y="${-k * 2.5}" width="104" height="86" rx="3" fill="#fffaf0" stroke="${PCOL[c]}" stroke-width="1.5"/>`;
-    s += `<g class="${ok ? 'hot' : ''}" ${ok ? actAttrs('buy', `data-c="${c}"`, `${pl.name} 주식 사기 ${price(G, c)}GP`) : ''} transform="translate(${x},${y})">${left ? stack + certArt(c, left, price(G, c)) : `<rect width="104" height="86" rx="3" fill="none" stroke="#8a7f68" stroke-dasharray="5 4"/>${sTxt(52, 48, '다 팔림', { a: 'middle', s: 12, f: '#6e6450' })}`}
+    s += `<g class="${ok ? 'hot' : ''}" ${ok ? actAttrs('buy', `data-c="${c}"`, `${pl.name} 주식 사기 ${buyCost(G, c)}GP`) : ''} transform="translate(${x},${y})">${left ? stack + certArt(c, left, price(G, c)) : `<rect width="104" height="86" rx="3" fill="none" stroke="#8a7f68" stroke-dasharray="5 4"/>${sTxt(52, 48, '다 팔림', { a: 'middle', s: 12, f: '#6e6450' })}`}
       ${ok ? '<rect class="hl" x="-4" y="-6" width="114" height="96" rx="5" fill="none" stroke="#ffd45e"/>' : ''}</g>`;
   });
   return s;
@@ -1279,7 +1297,7 @@ function drawMap() {
 
 // ---------- 확장: 시대의 사건 카드 ----------
 const sgnK = k => (k > 0 ? '+' : '−') + Math.abs(k);
-const EV_GOOD = { sup: 1, dem: 1, sale: 1, toll: -1, load: -1, ship: -1 }; // 플레이어에게 좋은 방향
+const EV_GOOD = { sup: 1, dem: 1, sale: 1, toll: -1, load: -1, ship: -1, stock: 1, buy: -1, div: 1 }; // 플레이어에게 좋은 방향
 function zoneEv(r, b) {
   const d = sailCost(G, r) - DATA.regions[r].sailCost, lm = evMod(G, 'load', r); let t = '';
   if (d) t += sTxt(b.w - 16 - 30, 30, `사건 ${sgnK(d)}`, { a: 'end', s: 10, w: 700, f: d > 0 ? '#a3321f' : '#2f6b3a' });
@@ -1289,7 +1307,14 @@ function zoneEv(r, b) {
 function evIcon(l) {
   if (l.kind === 'sup' || l.kind === 'dem' || l.kind === 'sale') return l.key === 'all' ? GOODS.map((g, i) => `<g transform="translate(${(i % 2) * 8},${Math.floor(i / 2) * 8 - 1})">${sCube(g, 7)}</g>`).join('') : `<g transform="translate(0,-1)">${sCube(l.key, 15)}</g>`;
   if (l.kind === 'ship') return `<g transform="translate(8,7) scale(.75)">${SICON.buyShip}</g>`;
+  if (l.kind === 'stock') return `<rect x="0" y="-1" width="16" height="16" rx="2" fill="#fffaf0" stroke="#3a2713"/><path d="${l.k > 0 ? 'M2.5 11.5l4-4 3 2.5 4-6M10 4h3.5v3.5' : 'M2.5 3.5l4 4 3-2.5 4 6M10 11h3.5V7.5'}" fill="none" stroke="${l.k > 0 ? '#2f6b3a' : '#a3321f'}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if (l.kind === 'buy') return `<rect x="1" y="0" width="15" height="14" rx="1.5" fill="#fffaf0" stroke="#3a2713"/><path d="M4 4h9M4 7h9M4 10h5" stroke="#3a2713" stroke-width="1"/>`;
+  if (l.kind === 'div') return sCoin(8, 7, 7.5, '₤');
   return `<circle cx="8" cy="7" r="7.5" fill="#3a2713"/>${sTxt(8, 10.6, l.key === 'all' ? '全' : l.key, { a: 'middle', s: l.key.length > 2 ? 7 : 9, w: 700, f: '#f1e4c2', cls: 'disp' })}`;
+}
+function exchEv(B) {
+  const b = evMod(G, 'buy', 'all'), d = evMod(G, 'div', 'all'), t = [b ? `살 때 ${sgnK(b)}GP` : '', d ? `배당 ${sgnK(d)}` : ''].filter(Boolean).join(' · ');
+  return t ? sTxt(B.x + 46, B.y + 49, '사건 ' + t, { s: 10, w: 700, f: b < 0 || d > 0 ? '#2f6b3a' : '#a3321f' }) : '';
 }
 function drawEventCard() {
   if (!(G.opts && G.opts.events)) return '';
@@ -1783,8 +1808,8 @@ function renderLobby() {
       <label class="fld" for="code">방 코드로 들어가기</label>
       <div class="row"><input id="code" maxlength="4" placeholder="ABCD" autocapitalize="characters"><button type="button" data-l="joincode" ${online ? '' : 'disabled'}>들어가기</button></div>
       ${saved ? `<h3>내가 만든 방 이어서 하기</h3><ul class="rooms">${saved}</ul>` : ''}
-${evOptHTML()}
-      <hr><div class="row"><button type="button" data-l="local">혼자 4자리 테스트</button><span class="hint">한 기기에서 네 자리를 번갈아 조작합니다.</span></div>`;
+      <hr><div class="row"><button type="button" data-l="local">혼자 4자리 테스트</button><span class="hint">한 기기에서 네 자리를 번갈아 조작합니다.</span></div>
+      ${evOptHTML()}`;
     return;
   }
   const status = NET.role === 'host' ? (NET.online ? '방장 · 손님을 기다리는 중' : '연결 준비 중…') : (NET.hostGone ? '방장과 연결이 끊겼어요. 다시 잇는 중…' : d ? '방장과 연결됨' : '방장에게 연결하는 중…');
@@ -1800,7 +1825,7 @@ ${evOptHTML()}
     <div class="row"><input id="link" readonly value="${esc(roomLink())}"><button type="button" data-l="copy">링크 복사</button></div>
     <p class="hint">친구에게 이 링크를 보내거나, 같은 주소에서 방 코드 <b>${esc(NET.code)}</b>를 입력하게 하세요.</p>
     <div class="seats">${seats}</div>
-    <p class="hint">규칙: ${d.events ? '<b>확장 「시대의 사건」 켬</b>' : '기본 규칙(확장 없음)'}</p>
+    ${NET.role === 'host' ? evOptHTML('roomev', !!d.events, '방장만 바꿀 수 있어요') : `<p class="hint">규칙: ${d.events ? '<b>확장 「시대의 사건」 켬</b>' : '기본 규칙(확장 없음)'} · 방장이 정합니다</p>`}
     <p class="hint">한 사람이 여러 자리에 앉아도 됩니다. 네 자리가 다 차야 시작할 수 있어요.</p>
     <div class="row"><button type="button" class="go" data-l="start" ${full && seated ? '' : 'disabled'}>게임 시작</button><button type="button" data-l="back">방에서 나가기</button></div>`;
 }
@@ -1817,7 +1842,7 @@ function redact(full, seatsMine) {
 const seatsOf = (room, uid) => new Set(room.seats.map((s, i) => (s && s.uid === uid ? i : -1)).filter(i => i >= 0));
 function viewFor(uid) {
   const H = NET.H, r = H.room;
-  return { t: 'room', room: { code: NET.code, status: r.status, seats: r.seats.map(s => s && { uid: s.uid, name: s.name, on: s.uid === NET.uid || H.conns.has(s.uid) }), ver: r.ver, prev: !!H.prev, prevBy: r.prevBy },
+  return { t: 'room', room: { code: NET.code, status: r.status, seats: r.seats.map(s => s && { uid: s.uid, name: s.name, on: s.uid === NET.uid || H.conns.has(s.uid) }), ver: r.ver, prev: !!H.prev, prevBy: r.prevBy, events: !!r.events },
     state: r.status === 'lobby' ? null : JSON.stringify(redact(H.full, seatsOf(r, uid))) };
 }
 function hostSave() { try { localStorage.setItem(hostKey(NET.code), JSON.stringify({ room: NET.H.room, full: NET.H.full, prev: NET.H.prev, at: Date.now() })); } catch (e) {} }
@@ -1840,6 +1865,9 @@ function hostMsg(from, m) {
     if (r.status !== 'lobby' || !r.seats.every(Boolean) || !r.seats.some(s => s.uid === from.uid)) return;
     H.full = createGame({ seed: Math.floor(Math.random() * 1e9), names: r.seats.map(s => s.name), events: !!r.events });
     r.status = 'playing'; r.ver = 1; H.prev = null; r.prevBy = null;
+  } else if (m.t === 'opt') {
+    if (r.status !== 'lobby' || from.uid !== NET.uid) return;
+    r.events = !!m.events;
   } else if (m.t === 'act') {
     if (r.status !== 'playing') return;
     if (m.ver !== r.ver) return err('판이 바뀌어서 최신 상태로 다시 그렸어요');
@@ -1938,6 +1966,7 @@ function leaveRoom() {
   show('lobby'); renderLobby();
 }
 function readNick() { const n = ($('nick') && $('nick').value || '').trim(); if (n) setNick(n); return n || nick(); }
+function roomSetEvents(v) { if (NET.role === 'host') send({ t: 'opt', events: !!v }); }
 async function lobbyClick(b) {
   const l = b.dataset.l;
   if (b.id === 'leave') { if (MODE === 'local') { MODE = null; G = null; show('lobby'); return renderLobby(); } return leaveRoom(); }
