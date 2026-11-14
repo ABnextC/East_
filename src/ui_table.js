@@ -24,7 +24,12 @@ const cube = (g, cls = '') => `<i class="cube ${g} ${cls}" title="${GOOD_KO[g]}"
 const pdot = p => `<i class="pdot" style="background:${PCOL[p]}"></i>`;
 function save() { if (MODE !== 'local') return; try { localStorage.setItem('eic-save', JSON.stringify(G)); } catch (e) {} }
 function load() { try { const t = localStorage.getItem('eic-save'); if (t) { const s = JSON.parse(t); if (s && s.players && s.awaiting) return s; } } catch (e) {} return null; }
-function newGame() { MODE = 'local'; G = createGame({ seed: Math.floor(Math.random() * 1e9) }); history = []; ui = {}; lastFocus = ''; save(); render(); }
+// 확장 「시대의 사건」 켜기(기본 켬). 새 게임부터 적용
+const evOn = () => { try { return localStorage.getItem('eic-events') !== '0'; } catch (e) { return true; } };
+function setEv(v) { try { localStorage.setItem('eic-events', v ? '1' : '0'); } catch (e) {} }
+const evOptHTML = () => `<label class="opt"><input type="checkbox" id="optev" ${evOn() ? 'checked' : ''}><span><b>확장: 시대의 사건</b><br><span class="hint">기간마다 그 시대의 사건 카드 1장이 공급·수요·항해비 등을 바꿉니다. 새 게임부터 적용</span></span></label>`;
+if (typeof document !== 'undefined' && document.addEventListener) document.addEventListener('change', e => { if (e.target && e.target.id === 'optev') setEv(e.target.checked); });
+function newGame() { MODE = 'local'; G = createGame({ seed: Math.floor(Math.random() * 1e9), events: evOn() }); history = []; ui = {}; lastFocus = ''; save(); render(); }
 function trimLog(s) { if (s.log.length > 150) s.log = s.log.slice(-150); }
 function doAct(a) {
   if (!a) return;
@@ -49,6 +54,7 @@ const L = {
   europe: { x: 60, y: 210, w: 500, h: 840 },
   indies: { x: 1840, y: 210, w: 500, h: 840 },
   mats: { x: 60, y: 1190, w: 555, h: 470, gap: 30 },
+  event: { x: 1478, y: 1060, w: 352, h: 122 },
 };
 const RING_ORDER = ['trader', 'shipowner', 'governor', 'captain', 'investor'];
 const REG_ORDER = ['III', 'II', 'I'];
@@ -212,7 +218,7 @@ function drawMap() {
         <circle cx="16" cy="16" r="11" fill="${S.ink}"/>${sTxt(16, 20.5, r, { a: 'middle', s: 11, w: 700, f: '#fff', cls: 'disp' })}
         ${sTxt(32, 22, rg.name, { s: 15, w: 700, f: S.ink, cls: 'disp' })}
         ${rg.goods.map((g, k) => `<g transform="translate(${8 + k * 20},34)">${sCube(g, 14)}</g>`).join('')}
-        ${sTxt(b.w - 16 - 30, 46, '항해비', { a: 'end', s: 11, f: S.ink })}${rg.sailCost ? sCoin(b.w - 16 - 15, 41, 10, rg.sailCost) : sTxt(b.w - 16 - 8, 46, '0', { a: 'end', s: 13, w: 700 })}</g></g>`;
+        ${sTxt(b.w - 16 - 30, 46, '항해비', { a: 'end', s: 11, f: S.ink })}${zoneEv(r, b)}${sailCost(G, r) ? sCoin(b.w - 16 - 15, 41, 10, sailCost(G, r)) : sTxt(b.w - 16 - 8, 46, '0', { a: 'end', s: 13, w: 700 })}</g></g>`;
     // 도시와 교역소
     rg.cities.forEach((c, i) => {
       const [x, y] = GP(...CITY_GEO[r][i]), [dx, dy, an] = CITY_LBL[r][i], own = G.cities[r + i];
@@ -233,6 +239,33 @@ function drawMap() {
   }
   if (G.phase === 'D') { const [x, y] = GP(92, 28.6); s += sTxt(x, y, '지역 I → II → III, 빠른 배부터 싣습니다', { a: 'middle', s: 13, w: 700, f: S.ink, cls: 'city-lbl' }); }
   return s;
+}
+
+// ---------- 확장: 시대의 사건 카드 ----------
+const sgnK = k => (k > 0 ? '+' : '−') + Math.abs(k);
+const EV_GOOD = { sup: 1, dem: 1, sale: 1, toll: -1, load: -1, ship: -1 }; // 플레이어에게 좋은 방향
+function zoneEv(r, b) {
+  const d = sailCost(G, r) - DATA.regions[r].sailCost, lm = evMod(G, 'load', r); let t = '';
+  if (d) t += sTxt(b.w - 16 - 30, 30, `사건 ${sgnK(d)}`, { a: 'end', s: 10, w: 700, f: d > 0 ? '#a3321f' : '#2f6b3a' });
+  if (lm) t += sTxt(54, 46, `살 때 큐브당 ${sgnK(lm)}`, { s: 10, w: 700, f: lm > 0 ? '#a3321f' : '#2f6b3a' });
+  return t;
+}
+function evIcon(l) {
+  if (l.kind === 'sup' || l.kind === 'dem' || l.kind === 'sale') return l.key === 'all' ? GOODS.map((g, i) => `<g transform="translate(${(i % 2) * 8},${Math.floor(i / 2) * 8 - 1})">${sCube(g, 7)}</g>`).join('') : `<g transform="translate(0,-1)">${sCube(l.key, 15)}</g>`;
+  if (l.kind === 'ship') return `<g transform="translate(8,7) scale(.75)">${SICON.buyShip}</g>`;
+  return `<circle cx="8" cy="7" r="7.5" fill="#3a2713"/>${sTxt(8, 10.6, l.key === 'all' ? '全' : l.key, { a: 'middle', s: l.key.length > 2 ? 7 : 9, w: 700, f: '#f1e4c2', cls: 'disp' })}`;
+}
+function drawEventCard() {
+  if (!(G.opts && G.opts.events)) return '';
+  const B = L.event, e = eventOf(G), ink = '#3a2713';
+  let s = `<g transform="translate(${B.x},${B.y})"><rect x="3" y="6" width="${B.w}" height="${B.h}" rx="6" fill="rgba(0,0,0,.4)"/><rect width="${B.w}" height="${B.h}" rx="6" fill="#f1e4c2" stroke="${ink}" stroke-width="2"/>
+    <rect x="5" y="5" width="${B.w - 10}" height="20" rx="2" fill="${ink}"/>${sTxt(14, 19.5, `시대의 사건 · ${G.period}기간`, { s: 11.5, w: 700, f: '#f1e4c2', cls: 'disp' })}`;
+  if (!e) return s + sTxt(B.w / 2, 72, '기간이 시작되면 사건 카드를 뽑습니다', { a: 'middle', s: 12, f: '#6e5c45' }) + '</g>';
+  s += sTxt(B.w - 14, 19.5, e.year, { a: 'end', s: 11, f: '#e8c878' }) + sTxt(14, 47, e.name, { s: 18, w: 700, f: ink, cls: 'disp' }) + sTxt(14, 64, e.text, { s: 11, f: '#6a5236' });
+  const ls = eventLines(e), two = ls.length > 2;
+  ls.forEach((l, i) => { const x = 12 + (two ? (i % 2) * 170 : 0), y = 74 + (two ? Math.floor(i / 2) : i) * 21, good = l.k * EV_GOOD[l.kind] > 0;
+    s += `<g transform="translate(${x},${y})">${evIcon(l)}${sTxt(21, 12, l.t, { s: 11.5, w: 700, f: good ? '#2f6b3a' : '#a3321f' })}</g>`; });
+  return s + `<rect x="0" y="0" width="${B.w}" height="${B.h}" fill="url(#grain)" opacity=".5" pointer-events="none" rx="6"/></g>`;
 }
 
 // ---------- 캐릭터·칸 그림(직접 그린 아이콘) ----------
@@ -300,6 +333,8 @@ function drawMarket(m) {
     const dv = G.dice ? G.dice[m][g] : '';
     s += `<g transform="translate(${x + 22},${B.y + 162})"><rect width="42" height="42" rx="8" fill="${GOODC[g]}" stroke="rgba(0,0,0,.5)" stroke-width="1.5"/><rect x="3" y="3" width="36" height="10" rx="4" fill="#fff" opacity=".2"/>${sTxt(21, 29, dv, { a: 'middle', s: 22, w: 700, f: g === 'silk' ? '#16303d' : '#fff' })}</g>`;
     if (card) s += sTxt(x + 78, B.y + 190, '+' + card[k], { s: 16, w: 700, f: '#ffd45e' });
+    const evb = (eu ? [['dem', '수요'], ['sale', '값']] : [['sup', '공급']]).map(([kd, nm]) => [nm, evMod(G, kd, g)]).filter(z => z[1]);
+    if (evb.length) { const t = '사건 ' + evb.map(([nm, v]) => nm + sgnK(v)).join(' '); s += `<rect x="${x + 4}" y="${B.y + 209}" width="80" height="17" rx="8.5" fill="rgba(0,0,0,.45)" stroke="#ffd45e" stroke-width="1"/>${sTxt(x + 44, B.y + 221.5, t, { a: 'middle', s: 10.5, w: 700, f: '#ffd45e' })}`; }
   });
   s += sTxt(B.x + 20, B.y + 190, eu ? '수요' : '공급', { s: 13, w: 700, f: 'rgba(255,255,255,.8)' });
   rows.forEach((p, ri) => { const y = B.y + 236 + ri * 78;
@@ -367,7 +402,7 @@ function drawMats() {
     // 살 수 있는 배
     s += sTxt(M.x + 24, M.y + 370, '살 수 있는 배', { s: 12, w: 700, f: '#6e5c45' });
     pl.supply.forEach((t, k) => { const info = shipInfo(t), late = info.period > G.period, x = M.x + 44 + k * 64, y = M.y + 418, dup = pl.supply.slice(0, k).filter(z => z === t).length;
-      s += pc(`sup${p}${t}${dup}`, `ship${p}`, x, y, `<g opacity="${late ? 0.45 : 1}"><circle r="27" cy="2" fill="rgba(0,0,0,.3)"/><circle r="27" fill="url(#shipface)" stroke="${PCOL[p]}" stroke-width="4"/><g transform="translate(0 -3)">${shipArt(t, 0.5)}</g>${sTxt(0, -15, SHIP_SHORT[t], { a: 'middle', s: 9, w: 700, f: '#10303a', cls: 'shipname' })}${sTxt(0, 15, `▣${info.tonnage} ≫${info.speed}`, { a: 'middle', s: 9, w: 700, f: '#10303a' })}${sTxt(0, 24, '★'.repeat(info.period) + ' ' + info.cost + 'GP', { a: 'middle', s: 8, f: '#8a5a00' })}</g>`); });
+      s += pc(`sup${p}${t}${dup}`, `ship${p}`, x, y, `<g opacity="${late ? 0.45 : 1}"><circle r="27" cy="2" fill="rgba(0,0,0,.3)"/><circle r="27" fill="url(#shipface)" stroke="${PCOL[p]}" stroke-width="4"/><g transform="translate(0 -3)">${shipArt(t, 0.5)}</g>${sTxt(0, -15, SHIP_SHORT[t], { a: 'middle', s: 9, w: 700, f: '#10303a', cls: 'shipname' })}${sTxt(0, 15, `▣${info.tonnage} ≫${info.speed}`, { a: 'middle', s: 9, w: 700, f: '#10303a' })}${sTxt(0, 24, '★'.repeat(info.period) + ' ' + shipCost(G, t) + 'GP', { a: 'middle', s: 8, f: shipCost(G, t) !== info.cost ? '#b8322a' : '#8a5a00' })}</g>`); });
     s += `</g>`;
   });
   return s;
@@ -415,7 +450,7 @@ const defs = E => `<defs>
   <pattern id="cardback" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="12" height="12" fill="#5a2a12"/><rect width="6" height="12" fill="#6b3418"/></pattern>
 </defs>`;
 function drawTable() {
-  return defs(era()) + drawStatus() + drawTrack() + drawCerts() + drawMarket('europe') + drawMarket('indies') + drawMap() + drawChars() + drawMats() + drawAgents() + '<g id="ghost" pointer-events="none"></g>';
+  return defs(era()) + drawStatus() + drawTrack() + drawCerts() + drawMarket('europe') + drawMarket('indies') + drawMap() + drawChars() + drawEventCard() + drawMats() + drawAgents() + '<g id="ghost" pointer-events="none"></g>';
 }
 
 // ---------- 카메라(끌어서 이동, 휠·두 손가락 확대) ----------
@@ -486,8 +521,9 @@ function render() {
 }
 function showEra(first) {
   const el = $('era'); if (!el || G.over) return; const E = era();
-  el.innerHTML = `<div class="era-k">${G.period}기간 · ${E.years}</div><div class="era-n">${E.name}</div><div class="era-s">${E.sub.join(' ')}</div>`;
-  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  const ev = eventOf(G);
+  el.innerHTML = `<div class="era-k">${G.period}기간 · ${E.years}</div><div class="era-n">${E.name}</div><div class="era-s">${E.sub.join(' ')}</div>${ev ? `<div class="era-e"><b>사건 · ${esc(ev.name)}</b> (${esc(ev.year)})<br>${eventLines(ev).map(l => esc(l.t)).join(' · ')}</div>` : ''}`;
+  if (el.style) el.style.animationDuration = ev ? '6s' : ''; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
 }
 function animatePieces(svg, old) {
   const pool = {}, now = {};

@@ -50,9 +50,67 @@ const log = (s, t) => { s.log.push(`[${s.period}${s.phase}] ${t}`); };
 const N = s => s.players.length;
 const pname = (s, p) => s.players[p].name;
 
-export function createGame({ seed = 1, names = ['빨강', '파랑', '노랑', '회색'] } = {}) {
+// ---------- 확장: 시대의 사건 ----------
+// 기간마다 그 시대의 사건 카드 1장을 뽑아 그 기간 내내 적용한다.
+// sup 인도 공급(D), dem 유럽 수요(E), toll 항해비, load 적재 큐브당 값, sale 판매 큐브당 값, ship 배 값. all = 모두
+export const EVENTS = [
+  { id: 'e1a', era: 1, name: '정향 독점 단속', year: '1700년대', text: '회사가 몰루카 밖의 정향나무를 베어 냅니다', sup: { spice: -2 }, dem: { spice: 1 } },
+  { id: 'e1b', era: 1, name: '말라카 해협의 해적', year: '1710년대', text: '해협을 지나는 배마다 호위가 붙습니다', toll: { II: 2 } },
+  { id: 'e1c', era: 1, name: '런던 커피하우스 유행', year: '1700년대', text: '커피집이 수천 곳으로 늘어납니다', dem: { coffee: 2 } },
+  { id: 'e1d', era: 1, name: '순조로운 계절풍', year: '해마다', text: '몬순이 제때 불어 뱃길이 빨라집니다', toll: { all: -1 } },
+  { id: 'e1e', era: 1, name: '무굴 계승 전쟁', year: '1707', text: '아우랑제브 사후 인도 내륙이 어지럽습니다', load: { III: 1 } },
+  { id: 'e1f', era: 1, name: '광저우 상관 개설', year: '1715', text: '중국 남쪽 항구에서 차를 사들이기 시작합니다', sup: { tea: 2 } },
+  { id: 'e2a', era: 2, name: '플라시 전투', year: '1757', text: '회사가 벵골의 세금을 거두게 됩니다', load: { III: -1 } },
+  { id: 'e2b', era: 2, name: '7년 전쟁의 사략선', year: '1756–1763', text: '적국 사략선이 인도양을 휘젓습니다', toll: { all: 1 } },
+  { id: 'e2c', era: 2, name: '차 감세법', year: '1784', text: '차 관세가 119%에서 12.5%로 내려갑니다', dem: { tea: 3 } },
+  { id: 'e2d', era: 2, name: '광저우 일구통상', year: '1757', text: '청이 서양 무역을 광저우 한 곳으로 묶습니다', toll: { I: 1 }, sup: { silk: -1 } },
+  { id: 'e2e', era: 2, name: '벵골 대기근', year: '1770', text: '흉년과 세금으로 벵골 인구가 크게 줄어듭니다', sup: { all: -1 } },
+  { id: 'e2f', era: 2, name: '보스턴 차 사건', year: '1773', text: '식민지 사람들이 회사의 차를 거부합니다', dem: { tea: -2 } },
+  { id: 'e3a', era: 3, name: '대륙 봉쇄령', year: '1806', text: '나폴레옹이 유럽 항구를 영국 배에 닫습니다', dem: { all: -1 } },
+  { id: 'e3b', era: 3, name: '인도 무역 독점 폐지', year: '1813', text: '누구나 인도와 무역할 수 있게 됩니다', sup: { all: 1 } },
+  { id: 'e3c', era: 3, name: '싱가포르 자유항', year: '1819', text: '관세 없는 항구가 해협 끝에 열립니다', toll: { II: -1 }, load: { II: -1 } },
+  { id: 'e3d', era: 3, name: '자와 강제 재배 제도', year: '1830', text: '농민에게 커피를 의무로 심게 합니다', sup: { coffee: 3 } },
+  { id: 'e3e', era: 3, name: '여름 없는 해', year: '1816', text: '탐보라 화산재가 하늘을 덮습니다', toll: { II: 1 }, sup: { coffee: -2 } },
+  { id: 'e3f', era: 3, name: '린쩌쉬의 아편 단속', year: '1839', text: '광저우 앞바다가 봉쇄됩니다', toll: { I: 2 } },
+  { id: 'e4a', era: 4, name: '난징 조약', year: '1842', text: '다섯 항구가 열리고 홍콩이 넘어갑니다', toll: { I: -1 }, sup: { tea: 1, silk: 1 } },
+  { id: 'e4b', era: 4, name: '차 경주 열기', year: '1866', text: '첫 햇차를 런던에 가장 먼저 대는 배에 웃돈', sale: { tea: 1 } },
+  { id: 'e4c', era: 4, name: '세포이 항쟁', year: '1857', text: '북인도 곳곳에서 반란이 일어납니다', toll: { III: 2 } },
+  { id: 'e4d', era: 4, name: '유럽 누에 전염병', year: '1850년대', text: '프랑스와 이탈리아의 누에가 병으로 죽습니다', dem: { silk: 3 } },
+  { id: 'e4e', era: 4, name: '실론 커피 대농장', year: '1840년대', text: '산비탈이 커피밭으로 바뀝니다', sup: { coffee: 2 } },
+  { id: 'e4f', era: 4, name: '크림 전쟁 수송 징발', year: '1854', text: '나라가 상선을 군 수송선으로 빌려 갑니다', ship: { all: 1 } },
+  { id: 'e5a', era: 5, name: '수에즈 운하 통행료', year: '1869', text: '지름길이 열렸지만 통행료가 비쌉니다', toll: { all: 1 } },
+  { id: 'e5b', era: 5, name: '해저 전신 개통', year: '1870', text: '런던 시세가 하루 만에 봄베이에 닿습니다', dem: { all: 1 } },
+  { id: 'e5c', era: 5, name: '실론 커피 녹병', year: '1869~', text: '잎마름병이 커피밭을 휩씁니다', sup: { coffee: -3 }, dem: { coffee: 1 } },
+  { id: 'e5d', era: 5, name: '아삼·실론 차 농장', year: '1880년대', text: '인도와 실론의 차가 중국 차를 앞지릅니다', sup: { tea: 3 } },
+  { id: 'e5e', era: 5, name: '1873년 공황', year: '1873', text: '유럽 증시가 무너지고 불황이 이어집니다', dem: { all: -1 } },
+  { id: 'e5f', era: 5, name: '증기선 조선 붐', year: '1880년대', text: '철선 조선소가 앞다투어 배를 찍어 냅니다', ship: { all: -1 } },
+];
+const EV = Object.fromEntries(EVENTS.map(e => [e.id, e]));
+export const eventOf = s => (s.opts && s.opts.events && s.event ? EV[s.event] : null);
+// 사건이 주는 보정값: 특정 키 + all
+export const evMod = (s, kind, key) => { const e = eventOf(s); if (!e || !e[kind]) return 0; return (e[kind][key] || 0) + (key !== 'all' ? e[kind].all || 0 : 0); };
+export const sailCost = (s, r) => Math.max(0, DATA.regions[r].sailCost + evMod(s, 'toll', r));
+export const shipCost = (s, t) => Math.max(0, SHIP[t].cost + evMod(s, 'ship', 'all'));
+const sgn = k => (k > 0 ? '+' : '−') + Math.abs(k);
+export function eventLines(e) {
+  const out = [], gk = g => (g === 'all' ? '모든 상품' : GOOD_KO[g]), rk = r => (r === 'all' ? '모든 지역' : DATA.regions[r].name);
+  for (const [g, k] of Object.entries(e.sup || {})) out.push({ kind: 'sup', key: g, k, t: `인도 ${gk(g)} 공급 ${sgn(k)}` });
+  for (const [g, k] of Object.entries(e.dem || {})) out.push({ kind: 'dem', key: g, k, t: `유럽 ${gk(g)} 수요 ${sgn(k)}` });
+  for (const [r, k] of Object.entries(e.toll || {})) out.push({ kind: 'toll', key: r, k, t: `${rk(r)} 항해비 ${sgn(k)}` });
+  for (const [r, k] of Object.entries(e.load || {})) out.push({ kind: 'load', key: r, k, t: `${rk(r)}에서 살 때 큐브당 ${sgn(k)}GP` });
+  for (const [g, k] of Object.entries(e.sale || {})) out.push({ kind: 'sale', key: g, k, t: `유럽에 ${gk(g)} 팔 때 큐브당 ${sgn(k)}GP` });
+  for (const [, k] of Object.entries(e.ship || {})) out.push({ kind: 'ship', key: 'all', k, t: `배 값 ${sgn(k)}GP` });
+  return out;
+}
+function drawEvent(s) {
+  const deck = EVENTS.filter(e => e.era === s.period);
+  const e = deck[rint(s, deck.length)]; s.event = e.id;
+  log(s, `시대의 사건 — ${e.name}(${e.year}): ${eventLines(e).map(x => x.t).join(', ')}`);
+}
+
+export function createGame({ seed = 1, names = ['빨강', '파랑', '노랑', '회색'], events = false } = {}) {
   const n = names.length;
-  const s = { rng: seed | 0, seed, period: 1, phase: 'A', sub: {}, turn: 0, log: [], over: false };
+  const s = { rng: seed | 0, seed, period: 1, phase: 'A', sub: {}, turn: 0, log: [], over: false, opts: { events: !!events }, event: null };
   s.initiative = shuffle(s, [...Array(n).keys()]);
   const money = [10, 10, 11, 12];
   s.players = names.map((name, i) => ({
@@ -99,7 +157,7 @@ function advance(s) {
       if (!sub.started) {
         if (s.period === 5) for (const pl of s.players) { pl.docks = pl.docks.map(d => (d && d.type === 'galleon' ? null : d)); }
         if (s.period === 5) { for (const r of REGIONS) s.regions[r] = s.regions[r].filter(e => s.players[e.p].docks[e.dock]); log(s, '5기간 — 갤리온을 모두 폐기'); }
-        rollDice(s); sub.started = true; s.turn = 0;
+        rollDice(s); if (s.opts && s.opts.events) drawEvent(s); sub.started = true; s.turn = 0;
       }
       const p = nextPlayer(s, q => pendingA(s, q));
       if (p == null) { s.phase = 'B'; s.sub = {}; continue; }
@@ -135,8 +193,9 @@ function advance(s) {
       if (!sub.started) {
         sub.started = true; s.cards.shown.indies = true;
         const card = DATA.marketCards.indies[group(s.period)][s.cards.indies].all;
-        GOODS.forEach((g, i) => { const k = s.dice.indies[g] + card[i]; s.markets.indies[g] = Math.min(SL.indies[g].length, s.markets.indies[g] + k); });
-        log(s, `인도 카드 공개 — 공급 ${GOODS.map((g, i) => GOOD_KO[g] + '+' + (s.dice.indies[g] + card[i])).join(' ')}`);
+        const add = GOODS.map((g, i) => Math.max(0, s.dice.indies[g] + card[i] + evMod(s, 'sup', g)));
+        GOODS.forEach((g, i) => { s.markets.indies[g] = Math.min(SL.indies[g].length, s.markets.indies[g] + add[i]); });
+        log(s, `인도 카드 공개 — 공급 ${GOODS.map((g, i) => GOOD_KO[g] + '+' + add[i]).join(' ')}`);
         sub.queue = [];
         for (const r of REGIONS) {
           const st = s.regions[r].map((e, i) => ({ ...e, i, region: r }));
@@ -154,8 +213,9 @@ function advance(s) {
       if (!sub.step) {
         sub.step = 'wh'; s.turn = 0; sub.whDone = []; s.cards.shown.europe = true;
         const card = DATA.marketCards.europe[group(s.period)][s.cards.europe].all;
-        GOODS.forEach((g, i) => { const k = s.dice.europe[g] + card[i]; s.markets.europe[g] = Math.max(0, s.markets.europe[g] - k); });
-        log(s, `유럽 카드 공개 — 수요 ${GOODS.map((g, i) => GOOD_KO[g] + '-' + (s.dice.europe[g] + card[i])).join(' ')}`);
+        const sub2 = GOODS.map((g, i) => Math.max(0, s.dice.europe[g] + card[i] + evMod(s, 'dem', g)));
+        GOODS.forEach((g, i) => { s.markets.europe[g] = Math.max(0, s.markets.europe[g] - sub2[i]); });
+        log(s, `유럽 카드 공개 — 수요 ${GOODS.map((g, i) => GOOD_KO[g] + '-' + sub2[i]).join(' ')}`);
       }
       if (sub.step === 'wh') {
         const p = s.initiative.find(q => !sub.whDone.includes(q) && s.players[q].warehouse.length);
@@ -265,15 +325,16 @@ const cnt = arr => arr.reduce((o, g) => (o[g] = (o[g] || 0) + 1, o), {});
 function loadCost(s, p, region, goods) {
   const sim = { ...s.markets.indies }, disc = s.players[p].posts.some(c => c.region === region) ? 1 : 0;
   let cost = 0;
-  for (const g of goods) { if (sim[g] <= 0) return null; cost += Math.max(0, SL.indies[g][sim[g] - 1] - disc); sim[g]--; }
+  const em = evMod(s, 'load', region);
+  for (const g of goods) { if (sim[g] <= 0) return null; cost += Math.max(0, SL.indies[g][sim[g] - 1] - disc + em); sim[g]--; }
   return cost;
 }
 function saleGain(s, p, counts) {
   let gain = 0;
   for (const g of GOODS) {
     let n = s.markets.europe[g];
-    const bonus = g !== 'tea' && hasSlot(s, p, sk('trader', g)) ? 1 : 0;
-    for (let i = 0; i < (counts[g] || 0); i++) { gain += (n < SL.europe[g].length ? SL.europe[g][n] : 1) + bonus; n++; }
+    const bonus = (g !== 'tea' && hasSlot(s, p, sk('trader', g)) ? 1 : 0) + evMod(s, 'sale', g);
+    for (let i = 0; i < (counts[g] || 0); i++) { gain += Math.max(0, (n < SL.europe[g].length ? SL.europe[g][n] : 1) + bonus); n++; }
   }
   return gain;
 }
@@ -300,10 +361,10 @@ export function legalActions(s) {
         const fee = occ.length, base = { type: 'place', agent: ai, char: c, slot: sl };
         const feeTxt = fee ? ` +자리세 ${fee}` : '';
         if (sl === 'buyShip') {
-          const types = [...new Set(pl.supply)].filter(t => SHIP[t].period <= s.period && pl.treasury >= SHIP[t].cost + fee);
+          const types = [...new Set(pl.supply)].filter(t => SHIP[t].period <= s.period && pl.treasury >= shipCost(s, t) + fee);
           const empty = pl.docks.findIndex((d, i) => i < dockCount(pl) && !d);
           for (const t of types) {
-            const tx = `${SHIP_KO[t]}(톤 ${SHIP[t].tonnage}·속 ${SHIP[t].speed}) ${SHIP[t].cost}GP${feeTxt}`;
+            const tx = `${SHIP_KO[t]}(톤 ${SHIP[t].tonnage}·속 ${SHIP[t].speed}) ${shipCost(s, t)}GP${feeTxt}`;
             if (dockCount(pl) > pl.docks.filter(Boolean).length) add({ ...base, ship: t, dock: empty === -1 ? pl.docks.length : empty, label: `${pre}${CHAR_KO[c]} · 배 구입: ${tx}` });
             else pl.docks.forEach((d, di) => { if (d && d.loc === 'port') add({ ...base, ship: t, dock: di, label: `${pre}${CHAR_KO[c]} · 배 구입: ${tx} — ${di + 1}번 부두 ${SHIP_KO[d.type]} 폐기` }); });
           }
@@ -333,7 +394,9 @@ export function legalActions(s) {
     const free = hasSlot(s, p, sk('captain', 'freeSailing'));
     pl.docks.forEach((d, di) => {
       if (!d || d.loc !== 'port') return;
-      for (const r of REGIONS) { const cost = free ? 0 : DATA.regions[r].sailCost; if (pl.treasury >= cost) add({ type: 'sail', dock: di, region: r, label: `${SHIP_KO[d.type]}(${di + 1}번) → ${DATA.regions[r].name} ${cost}GP` }); }
+      const cs = REGIONS.map(r => (free ? 0 : sailCost(s, r))), ok = cs.some(c => c <= pl.treasury), lo = Math.min(...cs);
+      // 사건으로 항해비가 올라 어디에도 못 가면, 가장 싼 곳으로 가고 모자란 돈은 부채
+      REGIONS.forEach((r, i) => { const cost = cs[i]; if (ok ? pl.treasury >= cost : cost === lo) add({ type: 'sail', dock: di, region: r, label: `${SHIP_KO[d.type]}(${di + 1}번) → ${DATA.regions[r].name} ${cost}GP${cost > pl.treasury ? ` (모자란 ${cost - pl.treasury}GP는 부채)` : ''}` }); });
     });
   }
   if (aw.type === 'load') {
@@ -389,7 +452,7 @@ export function apply(s, action) {
       for (const q of occ) { pl.treasury--; s.players[q].treasury++; }
       occ.push(p); ag.at = { char: a.char, slot: a.slot };
       if (a.slot === 'buyShip') {
-        pl.treasury -= SHIP[a.ship].cost; pl.supply.splice(pl.supply.indexOf(a.ship), 1);
+        pl.treasury -= shipCost(s, a.ship); pl.supply.splice(pl.supply.indexOf(a.ship), 1);
         pl.docks[a.dock] = mkShip(a.ship);
       } else if (a.slot === 'dock') pl.ext++;
       else if (a.slot === 'tradingPost') { pl.treasury -= 3; pl.posts.push({ region: a.region, city: a.city }); s.cities[a.region + a.city] = p; }
@@ -406,7 +469,7 @@ export function apply(s, action) {
     takeCard(s, m, a.card, [...users]); log(s, `${pl.name}: ${m === 'indies' ? '인도' : '유럽'} 카드를 골라 뒤집어 둠`);
   } else if (a.type === 'sail') {
     const d = pl.docks[a.dock], free = hasSlot(s, p, sk('captain', 'freeSailing'));
-    pl.treasury -= free ? 0 : DATA.regions[a.region].sailCost; d.loc = a.region; s.regions[a.region].push({ p, dock: a.dock });
+    charge(s, p, free ? 0 : sailCost(s, a.region)); d.loc = a.region; s.regions[a.region].push({ p, dock: a.dock });
     log(s, `${pl.name}: 배 1척 → ${DATA.regions[a.region].name}`); nextTurn();
   } else if (a.type === 'load' || a.type === 'stay') {
     const d = pl.docks[aw.dock], r = aw.region;

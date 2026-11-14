@@ -37,6 +37,7 @@ function renderLobby() {
       <label class="fld" for="code">방 코드로 들어가기</label>
       <div class="row"><input id="code" maxlength="4" placeholder="ABCD" autocapitalize="characters"><button type="button" data-l="joincode" ${online ? '' : 'disabled'}>들어가기</button></div>
       ${saved ? `<h3>내가 만든 방 이어서 하기</h3><ul class="rooms">${saved}</ul>` : ''}
+${evOptHTML()}
       <hr><div class="row"><button type="button" data-l="local">혼자 4자리 테스트</button><span class="hint">한 기기에서 네 자리를 번갈아 조작합니다.</span></div>`;
     return;
   }
@@ -53,6 +54,7 @@ function renderLobby() {
     <div class="row"><input id="link" readonly value="${esc(roomLink())}"><button type="button" data-l="copy">링크 복사</button></div>
     <p class="hint">친구에게 이 링크를 보내거나, 같은 주소에서 방 코드 <b>${esc(NET.code)}</b>를 입력하게 하세요.</p>
     <div class="seats">${seats}</div>
+    <p class="hint">규칙: ${d.events ? '<b>확장 「시대의 사건」 켬</b>' : '기본 규칙(확장 없음)'}</p>
     <p class="hint">한 사람이 여러 자리에 앉아도 됩니다. 네 자리가 다 차야 시작할 수 있어요.</p>
     <div class="row"><button type="button" class="go" data-l="start" ${full && seated ? '' : 'disabled'}>게임 시작</button><button type="button" data-l="back">방에서 나가기</button></div>`;
 }
@@ -90,7 +92,7 @@ function hostMsg(from, m) {
     r.seats[m.i] = null;
   } else if (m.t === 'start') {
     if (r.status !== 'lobby' || !r.seats.every(Boolean) || !r.seats.some(s => s.uid === from.uid)) return;
-    H.full = createGame({ seed: Math.floor(Math.random() * 1e9), names: r.seats.map(s => s.name) });
+    H.full = createGame({ seed: Math.floor(Math.random() * 1e9), names: r.seats.map(s => s.name), events: !!r.events });
     r.status = 'playing'; r.ver = 1; H.prev = null; r.prevBy = null;
   } else if (m.t === 'act') {
     if (r.status !== 'playing') return;
@@ -113,7 +115,7 @@ function hostMsg(from, m) {
 function hostOpen(code, saved, tries = 0) {
   MODE = 'online'; NET.role = 'host'; NET.code = code; NET.online = false; NET.room = null; NET.ver = 0; G = null;
   NET.H = saved ? { conns: new Map(), room: saved.room, full: saved.full, prev: saved.prev } :
-    { conns: new Map(), room: { status: 'lobby', seats: [{ uid: NET.uid, name: nick() || '방장' }, null, null, null], ver: 0, prevBy: null }, full: null, prev: null };
+    { conns: new Map(), room: { status: 'lobby', seats: [{ uid: NET.uid, name: nick() || '방장' }, null, null, null], ver: 0, prevBy: null, events: evOn() }, full: null, prev: null };
   try { location.hash = 'r-' + code; } catch (e) {}
   show('lobby'); renderLobby();
   const peer = NET.peer = new Peer(PEER_PREFIX + code, PEER_OPTS);
@@ -193,7 +195,7 @@ function readNick() { const n = ($('nick') && $('nick').value || '').trim(); if 
 async function lobbyClick(b) {
   const l = b.dataset.l;
   if (b.id === 'leave') { if (MODE === 'local') { MODE = null; G = null; show('lobby'); return renderLobby(); } return leaveRoom(); }
-  if (l === 'local') { MODE = 'local'; G = load() || createGame({ seed: Math.floor(Math.random() * 1e9) }); history = []; show('game'); return render(); }
+  if (l === 'local') { MODE = 'local'; G = load() || createGame({ seed: Math.floor(Math.random() * 1e9), events: evOn() }); history = []; show('game'); return render(); }
   if (l === 'create') { if (!readNick()) { toast('닉네임을 먼저 적어 주세요'); $('nick').focus(); return; } return hostOpen(newCode(), null); }
   if (l === 'joincode') { const c = ($('code').value || '').trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) return toast('방 코드는 영문 4글자예요'); readNick(); return guestOpen(c); }
   if (l === 'resume') { readNick(); let v = null; try { v = JSON.parse(localStorage.getItem(hostKey(b.dataset.code))); } catch (e) {} return v ? hostOpen(b.dataset.code, v) : toast('저장된 방을 찾지 못했어요'); }

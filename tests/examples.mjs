@@ -40,3 +40,21 @@ console.log('examples ok');
   if (g.players[h].treasury < 8) throw new Error('holder not paid in full');
   console.log('debt ok');
 }
+
+// 확장: 시대의 사건
+{
+  const { EVENTS, eventOf, evMod, sailCost, shipCost, eventLines } = await import('../src/engine.js');
+  const s = createGame({ seed: 5, events: true });
+  const e = eventOf(s); if (!e || e.era !== 1) throw new Error('event not drawn');
+  for (let P = 1; P <= 5; P++) if (EVENTS.filter(x => x.era === P).length < 5) throw new Error('deck ' + P);
+  for (const x of EVENTS) if (!eventLines(x).length) throw new Error('empty event ' + x.id);
+  // 강제로 사건을 바꿔 효과 확인
+  s.event = 'e1b'; if (sailCost(s, 'II') !== 3 || sailCost(s, 'I') !== 2) throw new Error('toll');
+  s.event = 'e1d'; if (sailCost(s, 'III') !== 0 || sailCost(s, 'I') !== 1) throw new Error('toll all');
+  s.event = 'e4f'; if (shipCost(s, 'clipper') !== 3) throw new Error('ship cost');
+  s.event = 'e2e'; if (evMod(s, 'sup', 'tea') !== -1) throw new Error('sup all');
+  const off = createGame({ seed: 5 }); if (eventOf(off) || off.event) throw new Error('off but drawn');
+  // 끄면 기본판과 완전히 같은 진행
+  const a = createGame({ seed: 9 }); if (JSON.stringify(a.dice) !== JSON.stringify(createGame({ seed: 9, events: false }).dice)) throw new Error('base changed');
+  console.log('events ok');
+}
