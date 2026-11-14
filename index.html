@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>동인도회사 테스트판</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* 한 가지 세계: 호두나무 탁자 위에 양피지 판. 유럽은 청록 판, 인도는 갈색 판. 아래 고정 띠에서 차례와 확정을 처리한다. */
+:root{color-scheme:dark;--table:#2a1d14;--table2:#3a2a1d;--paper:#efe2c4;--paper2:#e3d2ab;--ink:#2b2118;--mute:#6e5c45;--line:#bfa97c;--brass:#c8962e;--glow:#ffd45e;
+--eu:#1f4a55;--eu2:#2a6170;--in:#5a3a26;--in2:#74503a;--light:#f5ecd8;
+--p0:#c8402f;--p1:#2f6fc0;--p2:#e0ad1c;--p3:#8d979d;--tea:#3f9d57;--spice:#e2703a;--coffee:#5b3a26;--silk:#e9eef1;
+--display:"Gowun Batang","Noto Serif KR",serif;--body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--table);background-image:repeating-linear-gradient(92deg,rgba(255,255,255,.025) 0 2px,transparent 2px 9px);color:var(--ink);font:14px/1.45 var(--body)}
+main{max-width:1080px;margin:0 auto;padding:10px 16px 190px;display:grid;gap:12px;grid-template-columns:1fr}
+@media (min-width:860px){main{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:var(--light)}
+h1{font:700 19px/1.2 var(--display);margin:0}
+h2{font:700 15px/1.2 var(--display);margin:0 0 8px;letter-spacing:.02em}
+h3{font:600 14px/1.2 var(--body);margin:0}
+button{font:inherit;color:inherit;cursor:pointer}button:disabled{cursor:default}
+button:focus-visible{outline:3px solid var(--glow);outline-offset:2px}
+.tools button,#confirm button,.bar-c>button,.step button{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:7px 12px;color:var(--ink)}
+.tools{display:flex;gap:6px}.tools button:disabled{opacity:.4}
+#confirm{background:var(--paper);border-radius:10px;padding:10px 12px}
+.sect{background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:0 3px 0 rgba(0,0,0,.35);scroll-margin-top:8px;min-width:0}
+.sect.focus{border-color:var(--glow);box-shadow:0 0 0 3px rgba(255,212,94,.35),0 3px 0 rgba(0,0,0,.35)}
+.hint{font-size:12px;color:var(--mute);margin:6px 0 0}
+.late{opacity:.55}
+.coin{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9a3,var(--brass));border:1px solid #8a6412;color:#3a2a05;font-weight:600;font-size:12px;font-variant-numeric:tabular-nums;vertical-align:middle}
+.cube{display:inline-block;width:13px;height:13px;border-radius:2px;margin:1px;vertical-align:middle;border:1px solid rgba(0,0,0,.4);box-shadow:inset -2px -2px 0 rgba(0,0,0,.18)}
+.cube.big{width:22px;height:22px}
+.tea{background:var(--tea)}.spice{background:var(--spice)}.coffee{background:var(--coffee)}.silk{background:var(--silk)}
+.cube.empty{background:transparent;border:1px dashed rgba(255,255,255,.4);box-shadow:none}
+.cube.next{outline:2px solid var(--glow);outline-offset:1px}
+.meeple{width:18px;height:18px;vertical-align:middle;stroke:rgba(0,0,0,.45);stroke-width:1}.meeple.lg{width:30px;height:30px;flex:none}
+.pdot{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.45);margin:0 1px;vertical-align:middle}
+/* 상태 띠 */
+#status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
+.period{font:700 18px var(--display)}.yrs{color:var(--mute);margin-left:6px;font-size:13px}
+.phases{display:flex;gap:3px}.phases span{width:24px;height:24px;display:grid;place-items:center;border:1px solid var(--line);border-radius:4px;font-size:12px;color:var(--mute);background:var(--paper2)}
+.phases .on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:600}
+.init{display:flex;gap:5px}.wheel{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--pc);color:#fff;font-weight:600;font-size:13px;border:3px double rgba(0,0,0,.5);text-shadow:0 1px 1px rgba(0,0,0,.6)}
+.wheel.cur{box-shadow:0 0 0 3px var(--glow)}
+/* 증권거래소 */
+.sxwrap{overflow-x:auto;padding-bottom:4px}.sxtrack{display:flex;gap:2px;min-width:max-content;background:#6b4a2c;padding:5px;border-radius:8px}
+.sx{width:34px;display:flex;flex-direction:column;align-items:center;gap:2px;background:#8a6540;border-radius:5px 5px 12px 12px;padding:2px 0 5px;min-height:74px}
+.sx-d{font-size:9px;color:#ffe2b0;height:12px;white-space:nowrap;overflow:visible;align-self:flex-start;padding-left:2px}
+.sx-p{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9a3,var(--brass));font-weight:600;font-size:12px;color:#3a2a05}
+.sx-m{display:flex;flex-wrap:wrap;justify-content:center;gap:1px;max-width:30px}
+.sx.d1{background:#93693f}.sx.d2{background:#9c6f3e}.sx.d3{background:#a5753c}.sx.d4{background:#ae7b3a}
+.certs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.cert{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:74px;padding:6px 8px;background:#fffaf0;border:2px solid var(--pc);border-radius:6px;box-shadow:2px 2px 0 var(--pc);color:var(--ink)}
+.cert-n{font-weight:600;font-size:13px}.cert-k{font-size:12px;color:var(--mute)}
+.cert.mini{flex-direction:row;min-width:0;padding:2px 7px;gap:5px;box-shadow:1px 1px 0 var(--pc)}
+.cert:disabled{opacity:.75}
+.legal{box-shadow:0 0 0 3px var(--glow)!important;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(255,212,94,.45)}}
+@media (prefers-reduced-motion:reduce){.legal{animation:none}}
+/* 캐릭터 */
+.ring{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media (min-width:560px){.ring{grid-template-columns:repeat(3,1fr)}}
+.char{background:#b85a2e;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:5px;color:#fff;position:relative;border:2px solid #7c3a1a}
+.char h3{padding-left:38px;min-height:30px;display:flex;align-items:center;color:#ffe7b8;font-family:var(--display)}
+.portrait{position:absolute;left:8px;top:6px;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 40% 30%,#f4e3b8,#b48a45);border:2px solid #e6c36a;display:grid;place-items:center;color:#4a3210;font:700 15px var(--display)}
+.slot{display:flex;align-items:center;gap:6px;width:100%;min-height:38px;background:#f6ecd4;border:1px solid #cdb98a;border-radius:6px;padding:4px 6px;color:var(--ink);text-align:left}
+.slot:disabled{opacity:.82}.slot-t{flex:1;font-size:13px}.slot-m{display:flex;align-items:center;gap:1px}
+.ph{flex:none;width:18px;height:18px;border:1px solid var(--ink);display:grid;place-items:center;font-size:11px;font-weight:600;border-radius:2px;background:#fff}
+.fee{font-size:11px;font-weight:600;color:#8a3a12}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:74px;background:#cfd3d0;border:2px solid #8b918e;border-radius:50%/40%;color:var(--ink);font-weight:600}
+.center:disabled{opacity:.85}
+/* 지도 */
+.map{display:grid;gap:8px;grid-template-columns:1fr}
+@media (min-width:560px){.map{grid-template-columns:repeat(3,1fr)}}
+.region{display:block;width:100%;text-align:left;background:linear-gradient(160deg,#cfe0c2,#a9cdd0);border:2px solid #7f9b8a;border-radius:10px;padding:8px;color:var(--ink);min-height:112px}
+.region:disabled{opacity:1}.rg-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:var(--display)}.rg-g{margin-left:auto}
+.free{font:500 11px var(--body);color:var(--mute)}
+.cities{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin:5px 0}.city{display:inline-flex;align-items:center;gap:3px}
+.post{width:11px;height:11px;border-radius:50% 50% 2px 2px;border:1px solid rgba(0,0,0,.5);display:inline-block}.post.none{background:transparent;border-style:dashed}
+.rg-s{display:flex;gap:5px;flex-wrap:wrap}
+/* 배 */
+.ship{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:74px;height:74px;border-radius:50%;background:radial-gradient(circle at 50% 30%,#d7edf2,#7fb3c4);border:4px solid var(--pc);color:#10303a;padding:2px;flex:none}
+.ship:disabled{opacity:1}.ship-n{font-size:11px;font-weight:600;line-height:1.1}.ship-s{display:flex;gap:4px;font-size:11px}.ship-s b{background:#10303a;color:#fff;border-radius:3px;padding:0 3px;font-weight:500}
+.ship-c .cube{width:10px;height:10px}
+.ship.sel{box-shadow:0 0 0 4px var(--glow)!important;animation:none}.ship.cur{box-shadow:0 0 0 4px #fff,0 0 0 7px var(--glow)}.ship.sea{background:radial-gradient(circle at 50% 30%,#f2ead7,#c9b98f)}.ship.stay{border-style:dashed}
+/* 시장 */
+.scroll{overflow-x:auto}
+table.mk{border-collapse:separate;border-spacing:3px;width:100%;border-radius:10px;padding:6px;color:#fff}
+.mk.europe{background:var(--eu)}.mk.indies{background:var(--in)}
+.mk th{font-weight:500;font-size:12px;text-align:center;padding:2px}.mk td{text-align:center;border-radius:6px;padding:3px 2px;min-width:54px;height:30px}
+.mk.europe tbody td{background:var(--eu2)}.mk.indies tbody td{background:var(--in2)}
+.die{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:5px;font-weight:600;font-size:13px;color:#fff;border:1px solid rgba(0,0,0,.5);text-shadow:0 1px 1px rgba(0,0,0,.6)}.die.silk{color:#222;text-shadow:none}
+.cardn{font-size:12px;margin-left:3px;color:var(--glow)}
+.mk tfoot td{font-weight:600;font-size:15px;color:var(--glow)}
+/* 항구 */
+.port{background:linear-gradient(180deg,#d5e6e6,#f1e6c8);border:2px solid var(--pc);border-left-width:8px;border-radius:10px;padding:8px 10px;margin-top:8px;display:grid;gap:7px}
+.port.mine{box-shadow:0 0 0 2px var(--pc)}
+.port-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.port-h b{font:700 15px var(--display)}.vault{margin-left:auto;font-size:12px}.vault+.vault{margin-left:0}
+.docks{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dock{width:74px;height:74px;border-radius:50%;border:2px dashed var(--mute);display:grid;place-items:center;font-size:11px;color:var(--mute);text-align:center;padding:6px;flex:none}
+.wh{background:#6b4a2c;color:#fff;border-radius:6px;padding:6px 8px;font-size:12px;min-height:34px}
+.port-f{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}.certs-h{display:flex;gap:5px;flex-wrap:wrap}
+.smt{display:flex;gap:2px}.sm{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:1px 6px;color:var(--mute);background:#fff8}.sm.on{background:var(--pc);color:#fff;border-color:transparent;font-weight:600}
+/* 고정 띠 */
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#1b120c;color:var(--light);border-top:3px solid var(--brass);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;max-height:46vh;overflow-y:auto}
+.bar-t{display:flex;gap:10px;align-items:center}.bar-ph{font-size:12px;opacity:.8;margin:0 6px}.bar-m{font-size:13px;color:var(--glow)}
+.bar-c{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.bar-c>button.go{background:var(--brass);border-color:#8a6412;color:#221705;font-weight:600}.bar-c>button:disabled{opacity:.5}
+.step{display:inline-flex;align-items:center;gap:4px;background:#2c2018;border-radius:10px;padding:3px}.step button{min-width:42px;min-height:40px;font-size:18px;padding:2px 8px;text-align:center}.step button:disabled{opacity:.35}.step small{font-size:11px;margin-left:2px;color:var(--mute)}.step-n{min-width:38px;text-align:center;font-weight:600}
+.bar-c>button.pickc{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:48px;padding:5px 6px;opacity:.55}.bar-c>button.pickc.on{opacity:1;border-color:var(--glow);box-shadow:0 0 0 2px var(--glow)}.pickc small{font-size:11px}
+.bar-c>button.mcard{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;padding:8px 10px;color:#fff;font-weight:600}.mcard.indies{background:var(--in2)}.mcard.europe{background:var(--eu2)}
+table.score{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}.score th,.score td{padding:4px 8px;text-align:center;border-bottom:1px solid #4a3828;white-space:nowrap}
+details.sect summary{cursor:pointer;font:700 15px var(--display)}
+#log{margin:8px 0 0;padding:0;list-style:none;font-size:12px;max-height:240px;overflow-y:auto}#log li{padding:3px 0;border-bottom:1px dashed var(--line)}
+.note{color:#cbb994;font-size:12px;margin:0}
+
+.gamewrap{display:grid;gap:12px;grid-template-columns:1fr}
+@media (min-width:860px){.gamewrap{grid-template-columns:1fr 1fr}}
+.roomtag{font-size:12px;border:1px solid #6b5640;border-radius:999px;padding:2px 10px;color:#e8d9b8;margin-right:auto}
+.lobby{max-width:560px;justify-self:center;width:100%;display:grid;gap:8px}
+.lobby h3{margin:8px 0 0}.lobby hr{border:0;border-top:1px dashed var(--line);margin:8px 0;width:100%}
+.lobby input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fffaf0;color:var(--ink);min-width:0;flex:1}
+.lobby input:focus-visible{outline:3px solid var(--glow)}
+.fld{font-size:12px;font-weight:600;color:var(--mute);margin-top:4px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lobby button{background:#fffaf0;border:1px solid var(--line);border-radius:8px;padding:8px 14px;color:var(--ink)}
+.lobby button.go{background:var(--brass);border-color:#8a6412;font-weight:600;color:#221705}.lobby button:disabled{opacity:.45}
+.warn{background:#f7dccb;border-left:4px solid #b4512a;padding:8px 10px;border-radius:6px;margin:0;font-size:13px}
+.rooms{list-style:none;margin:0;padding:0;display:grid;gap:6px}.rooms button{width:100%;display:flex;justify-content:space-between;gap:8px;text-align:left}.rooms b{letter-spacing:.15em}.rooms span{color:var(--mute);font-size:13px}
+.code{font-family:var(--body);letter-spacing:.2em;background:var(--ink);color:var(--paper);padding:2px 10px;border-radius:6px}
+.seats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seat{border:2px solid var(--pc);border-left-width:8px;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:4px;background:#fffaf0;min-height:92px}
+.seat-c{font-size:12px;color:var(--mute)}.seat button{align-self:flex-start;padding:5px 12px}
+.me{font-size:11px;background:var(--ink);color:var(--paper);border-radius:999px;padding:1px 7px;align-self:flex-start}
+.ship.back{background:repeating-linear-gradient(45deg,#2c5a6a 0 6px,#244c5a 6px 12px);color:#fff;font:700 22px var(--display);display:grid;place-items:center}
+.peek{color:#8a5a00;font-weight:600}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(50vh);z-index:9;background:#1b120c;color:var(--light);border:2px solid var(--brass);border-radius:10px;padding:10px 14px;max-width:90vw;font-size:14px}
+.vault.debt{background:#b4512a;color:#fff;border-radius:999px;padding:1px 8px;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <header class="wide"><h1>동인도회사</h1><span id="roomtag" class="roomtag"></span><div class="tools"><button id="undo" type="button">한 수 무르기</button><button id="new" type="button">새 게임</button><button id="leave" type="button" hidden>방 목록으로</button></div></header>
+  <section id="lobby" class="sect wide lobby"></section>
+  <div id="game" class="wide gamewrap" hidden>
+  <div id="confirm" class="wide" hidden>지금 판을 버리고 새로 시작할까요? <button id="new-yes" type="button">새 게임 시작</button> <button id="new-no" type="button">계속하기</button></div>
+  <section id="status" class="sect wide"></section>
+  <section id="sec-stock" class="sect wide"></section>
+  <section id="sec-chars" class="sect wide"></section>
+  <section id="sec-map" class="sect wide"></section>
+  <section id="sec-europe" class="sect"></section>
+  <section id="sec-indies" class="sect"></section>
+  <section id="sec-ports" class="sect wide"></section>
+  <details class="sect wide"><summary>기록</summary><ol id="log"></ol></details>
+  <p class="note wide">방장 브라우저가 판정하고, 손님에게는 숨긴 정보를 보내지 않아요. 방장 창을 닫으면 게임이 멈췄다가, 방장이 다시 열면 이어져요.</p>
+  </div>
+</main>
+<div id="toast" role="status" hidden></div>
+<div id="bar" aria-live="polite" hidden></div>
+<script src="peerjs.min.js"></script>
+<script>
+const DATA = {"_meta": {"source": "한국어 룰북 PDF에 박힌 원본 그림 판독 + 웹 리뷰 2건(Meeple Mountain, The Rat Hole)", "confidence": "high=그림에 숫자가 또렷함 / mid=큐브·칸을 눈으로 셈(±1 오차 가능) / low=가려져서 추정", "date": "2026-11-13"}, "ships": {"_note": "플레이어당 10척: 갤리온 2, 증기선 2, 인디아맨·스쿠너·바크·클리퍼·P-라이너·스팀 클리퍼 1척씩(사용자 확인)", "types": [{"id": "galleon", "tonnage": 1, "speed": 1, "cost": 0, "period": 0, "note": "시작 2척, 5기간에 폐기", "confidence": "high", "count": 2}, {"id": "indiaman", "tonnage": 2, "speed": 1, "cost": 1, "period": 1, "confidence": "high", "count": 1, "periodCheck": "룰북 그림의 별 개수로 확인(2026-11-14)"}, {"id": "schooner", "tonnage": 1, "speed": 3, "cost": 1, "period": 1, "note": "별 1·톤수 1·속도 3·비용 1GP 사용자 확인", "confidence": "high", "count": 1}, {"id": "threemaster", "tonnage": 3, "speed": 1, "cost": 2, "period": 2, "confidence": "high", "count": 1, "periodCheck": "룰북 그림의 별 개수로 확인(2026-11-14)", "nameKo": "바크", "note": "한국어판 이름 바크(별도 배 아님). 사용자 확인 2026-11-14"}, {"id": "clipper", "tonnage": 1, "speed": 4, "cost": 2, "period": 2, "confidence": "high", "count": 1, "periodCheck": "룰북 그림의 별 개수로 확인(2026-11-14)", "note": "톤수 1·속도 4 사용자 확인"}, {"id": "pliner", "tonnage": 3, "speed": 2, "cost": 3, "period": 3, "confidence": "high", "count": 1, "note": "1척(사용자 확인 2026-11-14)", "periodCheck": "룰북 그림의 별 개수로 확인(2026-11-14)"}, {"id": "steamclipper", "nameKo": "스팀 클리퍼", "tonnage": 2, "speed": 3, "cost": 3, "period": 3, "count": 1, "confidence": "high", "note": "사용자 확인 2026-11-14"}, {"id": "steamer", "tonnage": 2, "speed": 4, "cost": 5, "period": 4, "confidence": "high", "count": 2, "periodCheck": "별 4개, 사용자 확인"}]}, "stockTrack": {"_note": "사용자 확인(2026-11-14). 23칸, 배당 구간 5·5·5·5·3칸, 첫 칸 4", "prices": [4, 4, 4, 5, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 19, 20, 20, 21], "dividends": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4], "startIndex": 0, "confidence": "high"}, "salesTrack": {"thresholds": [0, 10, 20, 30, 40, 50], "confidence": "high"}, "loadingTrack": {"speeds": [4, 3, 2, 1], "confidence": "high"}, "regions": {"I": {"name": "중국", "sailCost": 2, "goods": ["tea", "silk"], "cities": ["마카오", "홍콩", "포모사"]}, "II": {"name": "동인도제도", "sailCost": 1, "goods": ["tea", "coffee"], "cities": ["말라카", "바타비아"]}, "III": {"name": "인도", "sailCost": 0, "goods": ["tea", "spice"], "cities": ["봄베이", "캘커타", "퐁디셰리"]}, "_note": "교역소 칸: 인도 3, 중국 3, 동인도제도 2 (지도 화면 확인)"}, "characters": {"trader": [{"phase": "E", "effect": "spice +1"}, {"phase": "E", "effect": "coffee +1"}, {"phase": "E", "effect": "silk +1"}], "shipowner": [{"effect": "buyShip", "cost": "ship"}, {"effect": "dockExtension"}], "governor": [{"phase": "C", "effect": "influenceIndies"}, {"effect": "tradingPost", "cost": 3}], "captain": [{"phase": "B", "effect": "initiative", "cost": "period"}, {"phase": "C", "effect": "freeSailing"}], "investor": [{"effect": "buyShip", "cost": "ship"}, {"phase": "C", "effect": "influenceEurope"}], "center": {"note": "능력 없음, 점유자당 +1GP 규칙은 동일"}}, "markets4p": {"_note": "4인면. 칸 수와 시작 배치 사용자 확인(2026-11-14)", "europe": {"3": {"tea": 4}, "4": {"tea": 5, "spice": 2}, "5": {"tea": 3, "spice": 3, "coffee": 2}, "6": {"tea": 1, "spice": 4, "coffee": 2, "silk": 2}, "7": {"tea": 1, "spice": 2, "coffee": 4, "silk": 2}, "8": {"tea": 1, "spice": 2, "coffee": 4, "silk": 3}, "9": {"silk": 3}, "overflowPrice": 1}, "indies": {"1": {"tea": 7, "spice": 2}, "2": {"tea": 4, "spice": 3, "coffee": 3, "silk": 2}, "3": {"tea": 4, "spice": 3, "coffee": 3, "silk": 2}, "4": {"tea": 3, "spice": 3, "coffee": 3, "silk": 2}, "5": {"spice": 3, "coffee": 3, "silk": 4}, "6": {"spice": 2, "coffee": 4, "silk": 3}, "stayFee": 1}, "confidence": "high", "initialEmpty": {"europe": {"tea": 6, "spice": 2, "coffee": 2, "silk": 2}, "indies": {"tea": 11, "spice": 8, "coffee": 6, "silk": 4}, "_note": "시작 때 비어 있는 칸 수(싼 칸부터). 룰북 준비 그림 판독"}}, "dice": {"faces": [0, 1, 2, 3, 4, 5], "perMarket": {"tea": 1, "spice": 1, "coffee": 1, "silk": 1}, "_note": "사용자 확인: 상품마다 주사위 1개, 면은 0~5", "confidence": "high"}, "marketCards": {"_note": "[차, 향신료, 커피, 비단] 총 큐브 수. only4p는 4인일 때 더하는 큐브 수. 사용자 TTS 화면 40장 전부 대조(2026-11-14)", "europe": {"p1-2": [{"all": [2, 1, 3, 2], "only4p": [1, 0, 0, 0]}, {"all": [3, 2, 1, 2], "only4p": [1, 0, 0, 0]}, {"all": [4, 3, 1, 0], "only4p": [1, 0, 0, 0]}, {"all": [3, 4, 0, 1], "only4p": [1, 0, 0, 0]}, {"all": [2, 2, 2, 2], "only4p": [1, 0, 0, 0]}, {"all": [3, 1, 3, 1], "only4p": [1, 0, 0, 0]}], "p3-4": [{"all": [2, 4, 2, 2], "only4p": [0, 1, 1, 0]}, {"all": [1, 1, 5, 3], "only4p": [1, 0, 1, 0]}, {"all": [2, 4, 4, 0], "only4p": [2, 0, 0, 0]}, {"all": [3, 1, 3, 3], "only4p": [1, 0, 0, 1]}, {"all": [4, 3, 2, 1], "only4p": [1, 1, 0, 0]}, {"all": [2, 4, 0, 4], "only4p": [1, 0, 0, 1]}, {"all": [1, 4, 3, 2], "only4p": [1, 0, 0, 1]}, {"all": [2, 4, 3, 1], "only4p": [0, 1, 1, 0]}], "p5": [{"all": [3, 2, 3, 4], "only4p": [1, 1, 0, 0]}, {"all": [4, 3, 3, 2], "only4p": [1, 0, 0, 1]}, {"all": [3, 5, 2, 2], "only4p": [1, 0, 1, 0]}, {"all": [2, 4, 5, 1], "only4p": [1, 0, 1, 0]}, {"all": [5, 4, 2, 1], "only4p": [1, 1, 0, 0]}, {"all": [5, 2, 2, 3], "only4p": [2, 0, 0, 0]}]}, "indies": {"p1-2": [{"all": [2, 3, 2, 0], "only4p": [1, 0, 0, 0]}, {"all": [0, 3, 2, 2], "only4p": [0, 1, 0, 0]}, {"all": [3, 2, 1, 1], "only4p": [1, 0, 0, 0]}, {"all": [2, 2, 1, 2], "only4p": [1, 0, 0, 0]}, {"all": [1, 3, 2, 1], "only4p": [1, 0, 0, 0]}, {"all": [3, 0, 2, 2], "only4p": [1, 0, 0, 0]}], "p3-4": [{"all": [3, 4, 0, 2], "only4p": [1, 1, 0, 0]}, {"all": [3, 2, 3, 1], "only4p": [1, 0, 1, 0]}, {"all": [4, 3, 1, 1], "only4p": [1, 0, 0, 1]}, {"all": [1, 4, 4, 0], "only4p": [0, 1, 1, 0]}, {"all": [2, 3, 1, 3], "only4p": [0, 0, 1, 1]}, {"all": [4, 1, 2, 2], "only4p": [0, 1, 0, 1]}, {"all": [1, 5, 3, 0], "only4p": [1, 1, 0, 0]}, {"all": [1, 3, 2, 3], "only4p": [1, 0, 0, 1]}], "p5": [{"all": [2, 2, 3, 4], "only4p": [0, 1, 0, 1]}, {"all": [4, 3, 2, 2], "only4p": [2, 0, 0, 0]}, {"all": [2, 5, 2, 2], "only4p": [1, 0, 1, 0]}, {"all": [1, 4, 5, 1], "only4p": [0, 1, 1, 0]}, {"all": [5, 3, 2, 1], "only4p": [1, 1, 0, 0]}, {"all": [4, 3, 1, 3], "only4p": [1, 1, 0, 0]}]}, "confidence": "high"}, "markets2-3p": {"_note": "보류. 4인판 완성 뒤 진행"}};
+
+const GOODS = ['tea', 'spice', 'coffee', 'silk'];
+const GOOD_KO = { tea: '차', spice: '향신료', coffee: '커피', silk: '비단' };
+const RING = ['trader', 'shipowner', 'governor', 'captain', 'investor'];
+const CHAR_KO = { trader: '상인', shipowner: '선주', governor: '총독', captain: '선장', investor: '투자자', center: '중앙' };
+const SLOTS = {
+  trader: ['spice', 'coffee', 'silk'],
+  shipowner: ['buyShip', 'dock'],
+  governor: ['influenceIndies', 'tradingPost'],
+  captain: ['initiative', 'freeSailing'],
+  investor: ['buyShip', 'influenceEurope'],
+};
+const SLOT_KO = {
+  spice: '협상(향신료)', coffee: '협상(커피)', silk: '협상(비단)', buyShip: '배 구입', dock: '부두 확장',
+  influenceIndies: '영향력(인도 카드)', tradingPost: '교역소', initiative: '전문가(주도권)',
+  freeSailing: '지도 제작(항해비 면제)', influenceEurope: '영향력(유럽 카드)',
+};
+const SHIP_KO = { galleon: '갤리온', indiaman: '인디아맨', schooner: '스쿠너', threemaster: '바크', clipper: '클리퍼', pliner: 'P-라이너', steamclipper: '스팀 클리퍼', steamer: '증기선' };
+const REGIONS = ['I', 'II', 'III'];
+const COMPANY_KO = ['빨강', '파랑', '노랑', '회색'];
+const SHIP = Object.fromEntries(DATA.ships.types.map(s => [s.id, s]));
+const shipInfo = t => SHIP[t];
+
+// 시장 칸: 비싼 칸부터 나열. n = 큐브 수(비싼 칸부터 차 있음)
+const SL = {};
+for (const m of ['europe', 'indies']) {
+  SL[m] = {};
+  for (const g of GOODS) {
+    const arr = [];
+    const prices = Object.keys(DATA.markets4p[m]).filter(k => /^\d+$/.test(k)).map(Number).sort((a, b) => b - a);
+    for (const p of prices) for (let i = 0; i < (DATA.markets4p[m][String(p)][g] || 0); i++) arr.push(p);
+    SL[m][g] = arr;
+  }
+}
+const marketSlots = (m, g) => SL[m][g];
+
+function rnd(s) {
+  s.rng = (s.rng + 0x6D2B79F5) | 0;
+  let t = s.rng;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+const rint = (s, n) => Math.floor(rnd(s) * n);
+function shuffle(s, a) { for (let i = a.length - 1; i > 0; i--) { const j = rint(s, i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const group = p => (p <= 2 ? 'p1-2' : p <= 4 ? 'p3-4' : 'p5');
+const sk = (c, s) => c + '.' + s;
+const log = (s, t) => { s.log.push(`[${s.period}${s.phase}] ${t}`); };
+const N = s => s.players.length;
+const pname = (s, p) => s.players[p].name;
+
+function createGame({ seed = 1, names = ['빨강', '파랑', '노랑', '회색'] } = {}) {
+  const n = names.length;
+  const s = { rng: seed | 0, seed, period: 1, phase: 'A', sub: {}, turn: 0, log: [], over: false };
+  s.initiative = shuffle(s, [...Array(n).keys()]);
+  const money = [10, 10, 11, 12];
+  s.players = names.map((name, i) => ({
+    name, treasury: 0, sales: 0, salesMarker: 0, ext: 0, warehouse: [],
+    docks: [mkShip('galleon'), mkShip('galleon')],
+    supply: DATA.ships.types.filter(t => t.id !== 'galleon').flatMap(t => Array(t.count).fill(t.id)),
+    shares: Array(n).fill(0), posts: [], doneA: false, debt: 0,
+    agents: [0, 1, 2].map(() => ({ last: null, at: null, moved: false })),
+  }));
+  s.initiative.forEach((p, i) => { s.players[p].treasury = money[i]; });
+  s.stock = names.map(() => ({ idx: DATA.stockTrack.startIndex, inExchange: 7 }));
+  s.markets = { europe: {}, indies: {} };
+  for (const m of ['europe', 'indies']) for (const g of GOODS) s.markets[m][g] = SL[m][g].length - DATA.markets4p.initialEmpty[m][g];
+  s.decks = { europe: {}, indies: {} };
+  for (const m of ['europe', 'indies']) for (const k of ['p1-2', 'p3-4', 'p5']) s.decks[m][k] = DATA.marketCards[m][k].map((_, i) => i);
+  s.cards = { indies: null, europe: null, peek: { indies: [], europe: [] }, shown: { indies: false, europe: false } };
+  s.dice = null; s.occ = {}; s.center = []; s.cities = {}; s.regions = { I: [], II: [], III: [] };
+  s.awaiting = null;
+  advance(s);
+  return s;
+}
+function mkShip(type) { return { type, cargo: [], loc: 'port', stayed: false }; }
+const price = (s, c) => DATA.stockTrack.prices[s.stock[c].idx];
+const dividend = (s, c) => DATA.stockTrack.dividends[s.stock[c].idx];
+function moveStock(s, c, d) { s.stock[c].idx = Math.max(0, Math.min(DATA.stockTrack.prices.length - 1, s.stock[c].idx + d)); }
+const dockCount = pl => 2 + pl.ext;
+const whCap = pl => [0, 2, 3][pl.ext];
+const sellPrice = (s, g) => { const a = SL.europe[g], n = s.markets.europe[g]; return n < a.length ? a[n] : 1; };
+const buyPrice = (s, g) => { const n = s.markets.indies[g]; return n > 0 ? SL.indies[g][n - 1] : null; };
+const hasSlot = (s, p, key) => (s.occ[key] || []).includes(p);
+
+function rollDice(s) {
+  s.dice = { indies: {}, europe: {} };
+  for (const m of ['indies', 'europe']) for (const g of GOODS) s.dice[m][g] = DATA.dice.faces[rint(s, 6)];
+  log(s, `주사위 — 인도 ${GOODS.map(g => GOOD_KO[g] + s.dice.indies[g]).join(' ')} / 유럽 ${GOODS.map(g => GOOD_KO[g] + s.dice.europe[g]).join(' ')}`);
+}
+
+// ---------- 진행 ----------
+function advance(s) {
+  for (let guard = 0; guard < 10000; guard++) {
+    if (s.over) { s.awaiting = { type: 'over', player: null }; return; }
+    const ph = s.phase, sub = s.sub;
+    if (ph === 'A') {
+      if (!sub.started) {
+        if (s.period === 5) for (const pl of s.players) { pl.docks = pl.docks.map(d => (d && d.type === 'galleon' ? null : d)); }
+        if (s.period === 5) { for (const r of REGIONS) s.regions[r] = s.regions[r].filter(e => s.players[e.p].docks[e.dock]); log(s, '5기간 — 갤리온을 모두 폐기'); }
+        rollDice(s); sub.started = true; s.turn = 0;
+      }
+      const p = nextPlayer(s, q => pendingA(s, q));
+      if (p == null) { s.phase = 'B'; s.sub = {}; continue; }
+      s.awaiting = { type: 'place', player: p }; return;
+    }
+    if (ph === 'B') {
+      if (!sub.started) {
+        const users = s.occ[sk('captain', 'initiative')] || [];
+        if (users.length) { s.initiative = [...users, ...s.initiative.filter(p => !users.includes(p))]; log(s, `주도권 변경 → ${s.initiative.map(p => pname(s, p)).join(' > ')}`); }
+        sub.started = true; s.turn = 0; sub.passes = 0;
+      }
+      if (sub.passes >= N(s)) { s.phase = 'C'; s.sub = {}; continue; }
+      s.awaiting = { type: 'stock', player: s.initiative[s.turn] }; return;
+    }
+    if (ph === 'C') {
+      if (!sub.step) sub.step = 'cardI';
+      if (sub.step === 'cardI' || sub.step === 'cardE') {
+        const m = sub.step === 'cardI' ? 'indies' : 'europe';
+        const users = s.occ[sk(m === 'indies' ? 'governor' : 'investor', m === 'indies' ? 'influenceIndies' : 'influenceEurope')] || [];
+        const deck = s.decks[m][group(s.period)];
+        if (users.length) { s.awaiting = { type: 'chooseCard', player: users[0], market: m }; return; }
+        takeCard(s, m, deck[rint(s, deck.length)], []);
+        continue;
+      }
+      if (sub.step === 'sail') {
+        if (!sub.started) { sub.started = true; s.turn = 0; }
+        const p = nextPlayer(s, q => s.players[q].docks.some(d => d && d.loc === 'port'));
+        if (p == null) { s.phase = 'D'; s.sub = {}; continue; }
+        s.awaiting = { type: 'sail', player: p }; return;
+      }
+    }
+    if (ph === 'D') {
+      if (!sub.started) {
+        sub.started = true; s.cards.shown.indies = true;
+        const card = DATA.marketCards.indies[group(s.period)][s.cards.indies].all;
+        GOODS.forEach((g, i) => { const k = s.dice.indies[g] + card[i]; s.markets.indies[g] = Math.min(SL.indies[g].length, s.markets.indies[g] + k); });
+        log(s, `인도 카드 공개 — 공급 ${GOODS.map((g, i) => GOOD_KO[g] + '+' + (s.dice.indies[g] + card[i])).join(' ')}`);
+        sub.queue = [];
+        for (const r of REGIONS) {
+          const st = s.regions[r].map((e, i) => ({ ...e, i, region: r }));
+          const sh = e => s.players[e.p].docks[e.dock];
+          st.sort((a, b) => (sh(b).stayed - sh(a).stayed) || (sh(a).stayed ? a.i - b.i : (SHIP[sh(b).type].speed - SHIP[sh(a).type].speed) || (b.i - a.i)));
+          sub.queue.push(...st);
+        }
+        sub.ptr = 0;
+      }
+      if (sub.ptr >= sub.queue.length) { s.phase = 'E'; s.sub = {}; continue; }
+      const e = sub.queue[sub.ptr];
+      s.awaiting = { type: 'load', player: e.p, dock: e.dock, region: e.region }; return;
+    }
+    if (ph === 'E') {
+      if (!sub.step) {
+        sub.step = 'wh'; s.turn = 0; sub.whDone = []; s.cards.shown.europe = true;
+        const card = DATA.marketCards.europe[group(s.period)][s.cards.europe].all;
+        GOODS.forEach((g, i) => { const k = s.dice.europe[g] + card[i]; s.markets.europe[g] = Math.max(0, s.markets.europe[g] - k); });
+        log(s, `유럽 카드 공개 — 수요 ${GOODS.map((g, i) => GOOD_KO[g] + '-' + (s.dice.europe[g] + card[i])).join(' ')}`);
+      }
+      if (sub.step === 'wh') {
+        const p = s.initiative.find(q => !sub.whDone.includes(q) && s.players[q].warehouse.length);
+        if (p == null) {
+          sub.step = 'ships'; sub.queue = []; sub.ptr = 0;
+          s.initiative.forEach((p2, oi) => s.players[p2].docks.forEach((d, di) => { if (d && d.loc === 'sea') sub.queue.push({ p: p2, dock: di, oi }); }));
+          sub.queue.sort((a, b) => (SHIP[s.players[b.p].docks[b.dock].type].speed - SHIP[s.players[a.p].docks[a.dock].type].speed) || (a.oi - b.oi) || (a.dock - b.dock));
+          continue;
+        }
+        s.awaiting = { type: 'sellWarehouse', player: p }; return;
+      }
+      if (sub.step === 'ships') {
+        while (sub.ptr < sub.queue.length) {
+          const e = sub.queue[sub.ptr], d = s.players[e.p].docks[e.dock];
+          if (d.cargo.length) break;
+          d.loc = 'port'; sub.ptr++;
+        }
+        if (sub.ptr >= sub.queue.length) { s.phase = 'F'; s.sub = {}; continue; }
+        const e = sub.queue[sub.ptr];
+        s.awaiting = { type: 'unload', player: e.p, dock: e.dock }; return;
+      }
+    }
+    if (ph === 'F') { if (endPeriod(s)) return; continue; }
+  }
+  throw new Error('advance loop');
+}
+function nextPlayer(s, need) {
+  for (let i = 0; i < N(s); i++) { const idx = (s.turn + i) % N(s), p = s.initiative[idx]; if (need(p)) { s.turn = idx; return p; } }
+  return null;
+}
+function pendingA(s, p) {
+  const pl = s.players[p];
+  return pl.agents.some(a => a.at == null) || (!pl.doneA && pl.agents.some(a => a.at === 'center' && !a.moved));
+}
+function takeCard(s, m, idx, peek) {
+  const deck = s.decks[m][group(s.period)];
+  deck.splice(deck.indexOf(idx), 1);
+  s.cards[m] = idx; s.cards.peek[m] = peek; s.cards.shown[m] = false;
+  s.sub.step = m === 'indies' ? 'cardE' : 'sail';
+}
+function _endPeriod(s) { s.phase = 'F'; s.sub = {}; endPeriod(s); }
+// 갚을 수 있는 만큼 부채를 갚는다
+function settle(s, pl) { const r = Math.min(pl.treasury, pl.debt || 0); if (r > 0) { pl.treasury -= r; pl.debt -= r; log(s, `${pl.name}: 부채 ${r}GP 상환 (남은 부채 ${pl.debt})`); } }
+// 내야 할 돈: 모자라면 그만큼 부채로 남긴다(받는 쪽은 은행에서 전액을 받는다)
+function charge(s, p, amt) { const pl = s.players[p], paid = Math.min(pl.treasury, amt); pl.treasury -= paid; if (amt > paid) { pl.debt = (pl.debt || 0) + amt - paid; log(s, `${pl.name}: 돈이 모자라 ${amt - paid}GP를 부채로 남김`); } }
+const sellable = pl => pl.shares.some(k => k > 0);
+// F 단계. 반환값 true = 플레이어 결정(주식 매도)을 기다림
+function endPeriod(s) {
+  const sub = s.sub;
+  if (!sub.step) {
+    const n = N(s), order = s.initiative;
+    const rank = [...order].sort((a, b) => (s.players[b].sales - s.players[a].sales) || (order.indexOf(a) - order.indexOf(b)));
+    const bonus = n === 4 ? [2, 1, 0, -1] : [2, 1, 0];
+    rank.forEach((p, i) => moveStock(s, p, bonus[i] ?? 0));
+    for (const p of order) {
+      const pl = s.players[p], nm = Math.min(5, Math.floor(pl.sales / 10));
+      moveStock(s, p, nm - pl.salesMarker); pl.salesMarker = nm;
+    }
+    log(s, `판매액 — ${rank.map(p => `${pname(s, p)} ${s.players[p].sales}`).join(', ')}`);
+    s.initiative = [...order].sort((a, b) => (s.players[a].sales - s.players[b].sales) || (order.indexOf(a) - order.indexOf(b)));
+    for (const pl of s.players) { pl.treasury += pl.sales; pl.sales = 0; settle(s, pl); }
+    sub.pay = [];
+    for (const c of s.initiative) {
+      const dv = dividend(s, c); if (!dv) continue;
+      for (const h of s.initiative) if (h !== c && s.players[h].shares[c]) sub.pay.push({ c, h, amt: dv * s.players[h].shares[c] });
+    }
+    sub.step = 'div'; sub.i = 0;
+  }
+  if (sub.step === 'div') {
+    while (sub.i < sub.pay.length) {
+      const { c, h, amt } = sub.pay[sub.i], pc = s.players[c];
+      if (pc.treasury < amt && sellable(pc)) { s.awaiting = { type: 'raise', player: c, need: amt, to: h }; return true; }
+      charge(s, c, amt); s.players[h].treasury += amt; settle(s, s.players[h]);
+      log(s, `배당 — ${pname(s, c)} → ${pname(s, h)} ${amt}GP`); sub.i++;
+    }
+    sub.step = 'done';
+  }
+  log(s, `주가 — ${s.players.map((pl, c) => `${pl.name} ${price(s, c)}`).join(', ')}`);
+  for (const pl of s.players) { pl.doneA = false; for (const a of pl.agents) { a.last = a.at === 'center' ? 'center' : a.at ? a.at.char : null; a.at = null; a.moved = false; } }
+  s.occ = {}; s.center = [];
+  s.cards = { indies: null, europe: null, peek: { indies: [], europe: [] }, shown: { indies: false, europe: false } };
+  if (s.period === 5) {
+    s.over = true;
+    s.scores = s.players.map((pl, p) => {
+      const own = 2 * price(s, p), held = pl.shares.reduce((t, k, c) => t + k * price(s, c), 0), debt = pl.debt || 0;
+      return { p, president: own, shares: held, cash: pl.treasury, debt, total: own + held + pl.treasury - debt };
+    });
+    const io = s.initiative;
+    s.ranking = [...s.scores].sort((a, b) => (b.total - a.total) || (price(s, b.p) - price(s, a.p)) || (b.cash - a.cash) || (io.indexOf(a.p) - io.indexOf(b.p))).map(x => x.p);
+    log(s, `게임 종료 — ${s.ranking.map(p => `${pname(s, p)} ${s.scores[p].total}`).join(', ')}`);
+    return false;
+  }
+  s.period++; s.phase = 'A'; s.sub = {};
+  return false;
+}
+
+// ---------- 가능한 행동 ----------
+function combos(limits, maxTotal) {
+  const keys = Object.keys(limits), out = [];
+  (function rec(i, cur, tot) {
+    if (i === keys.length) { out.push({ ...cur }); return; }
+    for (let k = 0; k <= limits[keys[i]] && tot + k <= maxTotal; k++) { cur[keys[i]] = k; rec(i + 1, cur, tot + k); }
+  })(0, {}, 0);
+  return out;
+}
+const cnt = arr => arr.reduce((o, g) => (o[g] = (o[g] || 0) + 1, o), {});
+function loadCost(s, p, region, goods) {
+  const sim = { ...s.markets.indies }, disc = s.players[p].posts.some(c => c.region === region) ? 1 : 0;
+  let cost = 0;
+  for (const g of goods) { if (sim[g] <= 0) return null; cost += Math.max(0, SL.indies[g][sim[g] - 1] - disc); sim[g]--; }
+  return cost;
+}
+function saleGain(s, p, counts) {
+  let gain = 0;
+  for (const g of GOODS) {
+    let n = s.markets.europe[g];
+    const bonus = g !== 'tea' && hasSlot(s, p, sk('trader', g)) ? 1 : 0;
+    for (let i = 0; i < (counts[g] || 0); i++) { gain += (n < SL.europe[g].length ? SL.europe[g][n] : 1) + bonus; n++; }
+  }
+  return gain;
+}
+const fmtCounts = c => GOODS.filter(g => c[g]).map(g => `${GOOD_KO[g]} ${c[g]}`).join(', ') || '없음';
+
+function legalActions(s) {
+  const aw = s.awaiting, out = [];
+  if (!aw || aw.type === 'over') return out;
+  const p = aw.player, pl = s.players[p];
+  const add = a => { a.key = JSON.stringify(a); out.push(a); return a; };
+  if (aw.type === 'place') {
+    const seen = new Set();
+    pl.agents.forEach((a, ai) => {
+      if (a.at != null && !(a.at === 'center' && !a.moved)) return;
+      const tag = a.at === 'center' ? 'c' : 'n:' + a.last;
+      if (seen.has(tag)) return; seen.add(tag);
+      const fromCenter = a.at === 'center';
+      const chars = (fromCenter || s.period === 1 || a.last == null || a.last === 'center') ? RING
+        : RING.filter(c => { const d = Math.abs(RING.indexOf(c) - RING.indexOf(a.last)); return d <= 1 || d === 4; });
+      const pre = fromCenter ? '중앙에서 이동 → ' : (a.last && s.period > 1 ? `(${CHAR_KO[a.last]}에 있던 요원) ` : '');
+      for (const c of chars) for (const sl of SLOTS[c]) {
+        const key = sk(c, sl), occ = s.occ[key] || [];
+        if (occ.includes(p)) continue;
+        const fee = occ.length, base = { type: 'place', agent: ai, char: c, slot: sl };
+        const feeTxt = fee ? ` +자리세 ${fee}` : '';
+        if (sl === 'buyShip') {
+          const types = [...new Set(pl.supply)].filter(t => SHIP[t].period <= s.period && pl.treasury >= SHIP[t].cost + fee);
+          const empty = pl.docks.findIndex((d, i) => i < dockCount(pl) && !d);
+          for (const t of types) {
+            const tx = `${SHIP_KO[t]}(톤 ${SHIP[t].tonnage}·속 ${SHIP[t].speed}) ${SHIP[t].cost}GP${feeTxt}`;
+            if (dockCount(pl) > pl.docks.filter(Boolean).length) add({ ...base, ship: t, dock: empty === -1 ? pl.docks.length : empty, label: `${pre}${CHAR_KO[c]} · 배 구입: ${tx}` });
+            else pl.docks.forEach((d, di) => { if (d && d.loc === 'port') add({ ...base, ship: t, dock: di, label: `${pre}${CHAR_KO[c]} · 배 구입: ${tx} — ${di + 1}번 부두 ${SHIP_KO[d.type]} 폐기` }); });
+          }
+        } else if (sl === 'dock') { if (pl.ext < 2 && pl.treasury >= fee) add({ ...base, label: `${pre}${CHAR_KO[c]} · 부두 확장 ${pl.ext + 1}단계${feeTxt}` }); }
+        else if (sl === 'tradingPost') {
+          if (pl.posts.length < 2 && pl.treasury >= 3 + fee) for (const r of REGIONS) {
+            if (pl.posts.some(x => x.region === r)) continue;
+            const ci = DATA.regions[r].cities.findIndex((_, i) => s.cities[r + i] == null);
+            if (ci >= 0) add({ ...base, region: r, city: ci, label: `${pre}${CHAR_KO[c]} · 교역소: ${DATA.regions[r].name} ${DATA.regions[r].cities[ci]} 3GP${feeTxt}` });
+          }
+        } else if (sl === 'initiative') { if (pl.treasury >= s.period + fee) add({ ...base, label: `${pre}${CHAR_KO[c]} · 전문가(주도권) ${s.period}GP${feeTxt}` }); }
+        else if (pl.treasury >= fee) add({ ...base, label: `${pre}${CHAR_KO[c]} · ${SLOT_KO[sl]}${feeTxt}` });
+      }
+      if (!fromCenter) { const fee = s.center.filter(q => q !== p).length; add({ type: 'place', agent: ai, char: 'center', label: `${pre}중앙에 배치(능력 없음)${fee ? ` 자리세 ${fee}` : ''}${fee > pl.treasury ? ` (모자란 ${fee - pl.treasury}GP는 부채)` : ''}` }); }
+    });
+    if (!pl.agents.some(a => a.at == null)) add({ type: 'passA', label: '중앙 요원을 그대로 두고 마침' });
+  }
+  if (aw.type === 'stock') {
+    s.stock.forEach((st, c) => { if (st.inExchange > 0 && pl.treasury >= price(s, c)) add({ type: 'buyShare', company: c, label: `${pname(s, c)} 주식 1장 구매 (${price(s, c)}GP)` }); });
+    add({ type: 'pass', label: '패스' });
+  }
+  if (aw.type === 'chooseCard') {
+    const m = aw.market, k = group(s.period);
+    for (const i of s.decks[m][k]) { const c = DATA.marketCards[m][k][i].all; add({ type: 'chooseCard', card: i, label: `${m === 'indies' ? '인도' : '유럽'} 카드: ${GOODS.map((g, j) => GOOD_KO[g] + c[j]).join(' ')}` }); }
+  }
+  if (aw.type === 'sail') {
+    const free = hasSlot(s, p, sk('captain', 'freeSailing'));
+    pl.docks.forEach((d, di) => {
+      if (!d || d.loc !== 'port') return;
+      for (const r of REGIONS) { const cost = free ? 0 : DATA.regions[r].sailCost; if (pl.treasury >= cost) add({ type: 'sail', dock: di, region: r, label: `${SHIP_KO[d.type]}(${di + 1}번) → ${DATA.regions[r].name} ${cost}GP` }); }
+    });
+  }
+  if (aw.type === 'load') {
+    const d = pl.docks[aw.dock], rg = DATA.regions[aw.region].goods, t = SHIP[d.type].tonnage;
+    const lim = {}; for (const g of rg) lim[g] = Math.min(t, s.markets.indies[g]);
+    for (const c of combos(lim, t)) {
+      const goods = rg.flatMap(g => Array(c[g]).fill(g)), cost = loadCost(s, p, aw.region, goods);
+      if (cost == null || cost > pl.treasury) continue;
+      add({ type: 'load', goods, label: goods.length ? `${SHIP_KO[d.type]} 적재: ${fmtCounts(c)} (${cost}GP)` : `${SHIP_KO[d.type]} 빈 배로 귀환` });
+    }
+    if (s.period < 5 && pl.treasury >= 1) add({ type: 'stay', label: `${SHIP_KO[d.type]} 인도양 잔류 (1GP)` });
+  }
+  if (aw.type === 'sellWarehouse') {
+    for (const c of combos(cnt(pl.warehouse), 99)) add({ type: 'sellWarehouse', sell: c, label: `창고 판매: ${fmtCounts(c)} (+${saleGain(s, p, c)}GP)` });
+  }
+  if (aw.type === 'unload') {
+    const d = pl.docks[aw.dock], cargo = cnt(d.cargo), free = whCap(pl) - pl.warehouse.length;
+    for (const c of combos(cargo, 99)) {
+      const kept = d.cargo.length - Object.values(c).reduce((a, b) => a + b, 0);
+      if (kept > free) continue;
+      add({ type: 'unload', sell: c, label: `${SHIP_KO[d.type]} 하역 — 판매: ${fmtCounts(c)} (+${saleGain(s, p, c)}GP)${kept ? `, 창고 보관 ${kept}` : ''}` });
+    }
+  }
+  if (aw.type === 'raise') {
+    pl.shares.forEach((k, c) => { if (k > 0) add({ type: 'sellShare', company: c, label: `${pname(s, c)} 주식 1장 매도 (+${price(s, c)}GP)` }); });
+    return out;
+  }
+  if (s.phase !== 'B' && (s.period < 5 || s.phase === 'A')) {
+    pl.shares.forEach((k, c) => { if (k > 0) add({ type: 'sellShare', company: c, extra: true, label: `${pname(s, c)} 주식 1장 매도 (+${price(s, c)}GP)` }); });
+  }
+  return out;
+}
+
+function apply(s, action) {
+  const legal = legalActions(s).find(a => a.key === (action.key || JSON.stringify(action)));
+  if (!legal) throw new Error('illegal action: ' + JSON.stringify(action));
+  const a = legal, aw = s.awaiting, p = aw.player, pl = s.players[p];
+  const nextTurn = () => { s.turn = (s.turn + 1) % N(s); };
+  if (a.type === 'sellShare') {
+    pl.treasury += price(s, a.company); pl.shares[a.company]--; s.stock[a.company].inExchange++; moveStock(s, a.company, -1);
+    log(s, `${pl.name}: ${pname(s, a.company)} 주식 매도 → 주가 ${price(s, a.company)}`);
+    advance(s); return s;
+  }
+  if (a.type === 'place') {
+    const ag = pl.agents[a.agent];
+    if (ag.at === 'center') { s.center.splice(s.center.indexOf(p), 1); ag.moved = true; }
+    if (a.char === 'center') {
+      const others = s.center.filter(q => q !== p);
+      charge(s, p, others.length); for (const q of others) s.players[q].treasury++;
+      s.center.push(p); ag.at = 'center';
+    } else {
+      const key = sk(a.char, a.slot), occ = s.occ[key] || (s.occ[key] = []);
+      for (const q of occ) { pl.treasury--; s.players[q].treasury++; }
+      occ.push(p); ag.at = { char: a.char, slot: a.slot };
+      if (a.slot === 'buyShip') {
+        pl.treasury -= SHIP[a.ship].cost; pl.supply.splice(pl.supply.indexOf(a.ship), 1);
+        pl.docks[a.dock] = mkShip(a.ship);
+      } else if (a.slot === 'dock') pl.ext++;
+      else if (a.slot === 'tradingPost') { pl.treasury -= 3; pl.posts.push({ region: a.region, city: a.city }); s.cities[a.region + a.city] = p; }
+      else if (a.slot === 'initiative') pl.treasury -= s.period;
+    }
+    log(s, `${pl.name}: ${a.label}`); nextTurn();
+  } else if (a.type === 'passA') { pl.doneA = true; nextTurn(); }
+  else if (a.type === 'buyShare') {
+    pl.treasury -= price(s, a.company); pl.shares[a.company]++; s.stock[a.company].inExchange--; moveStock(s, a.company, 1);
+    s.sub.passes = 0; log(s, `${pl.name}: ${pname(s, a.company)} 주식 구매 → 주가 ${price(s, a.company)}`); nextTurn();
+  } else if (a.type === 'pass') { s.sub.passes++; nextTurn(); }
+  else if (a.type === 'chooseCard') {
+    const m = aw.market, users = s.occ[sk(m === 'indies' ? 'governor' : 'investor', m === 'indies' ? 'influenceIndies' : 'influenceEurope')];
+    takeCard(s, m, a.card, [...users]); log(s, `${pl.name}: ${m === 'indies' ? '인도' : '유럽'} 카드를 골라 뒤집어 둠`);
+  } else if (a.type === 'sail') {
+    const d = pl.docks[a.dock], free = hasSlot(s, p, sk('captain', 'freeSailing'));
+    pl.treasury -= free ? 0 : DATA.regions[a.region].sailCost; d.loc = a.region; s.regions[a.region].push({ p, dock: a.dock });
+    log(s, `${pl.name}: 배 1척 → ${DATA.regions[a.region].name}`); nextTurn();
+  } else if (a.type === 'load' || a.type === 'stay') {
+    const d = pl.docks[aw.dock], r = aw.region;
+    if (a.type === 'stay') { pl.treasury -= 1; d.stayed = true; }
+    else {
+      pl.treasury -= loadCost(s, p, r, a.goods);
+      for (const g of a.goods) s.markets.indies[g]--;
+      d.cargo = [...a.goods]; d.loc = 'sea'; d.stayed = false;
+      s.regions[r] = s.regions[r].filter(e => !(e.p === p && e.dock === aw.dock));
+    }
+    log(s, `${pl.name}: ${a.label}`); s.sub.ptr++;
+  } else if (a.type === 'sellWarehouse' || a.type === 'unload') {
+    const gain = saleGain(s, p, a.sell);
+    for (const g of GOODS) s.markets.europe[g] = Math.min(SL.europe[g].length, s.markets.europe[g] + (a.sell[g] || 0));
+    pl.sales += gain;
+    const src = a.type === 'unload' ? pl.docks[aw.dock].cargo : pl.warehouse, rest = [...src];
+    for (const g of GOODS) for (let i = 0; i < (a.sell[g] || 0); i++) rest.splice(rest.indexOf(g), 1);
+    if (a.type === 'unload') { pl.warehouse.push(...rest); pl.docks[aw.dock].cargo = []; pl.docks[aw.dock].loc = 'port'; s.sub.ptr++; }
+    else { pl.warehouse = rest; s.sub.whDone.push(p); }
+    log(s, `${pl.name}: ${a.label}`);
+  }
+  advance(s);
+  return s;
+}
+
+// 불변식 점검(테스트용)
+function check(s) {
+  const n = N(s), err = [];
+  s.players.forEach((pl, p) => {
+    if (pl.treasury < 0) err.push(`treasury<0 ${p}`);
+    if ((pl.debt || 0) < 0) err.push(`debt<0 ${p}`);
+    if (pl.warehouse.length > whCap(pl)) err.push(`warehouse over ${p}`);
+    if (pl.docks.filter(Boolean).length > dockCount(pl)) err.push(`docks over ${p}`);
+    if (pl.posts.length > 2) err.push('posts>2');
+    for (const d of pl.docks) if (d && d.cargo.length > SHIP[d.type].tonnage) err.push('cargo over');
+  });
+  for (let c = 0; c < n; c++) { const held = s.players.reduce((t, pl) => t + pl.shares[c], 0); if (held + s.stock[c].inExchange !== 7) err.push(`shares ${c}`); }
+  for (const m of ['europe', 'indies']) for (const g of GOODS) { const v = s.markets[m][g]; if (v < 0 || v > SL[m][g].length) err.push(`market ${m} ${g}`); }
+  return err;
+}
+const PCOL = ['var(--p0)', 'var(--p1)', 'var(--p2)', 'var(--p3)'];
+const PHASE_KO = { A: '요원 배치', B: '증권거래소', C: '항해', D: '적재', E: '판매', F: '정산' };
+const PERIOD_KO = ['', '1700–1750', '1750–1800', '1800–1840', '1840–1870', '1870–1900'];
+const SLOT_SHORT = { spice: '향신료 +1', coffee: '커피 +1', silk: '비단 +1', buyShip: '배 구입', dock: '부두 확장', influenceIndies: '인도 카드 선택', tradingPost: '교역소 3', initiative: '주도권', freeSailing: '항해비 면제', influenceEurope: '유럽 카드 선택' };
+const SLOT_PHASE = { spice: 'E', coffee: 'E', silk: 'E', influenceIndies: 'C', initiative: 'B', freeSailing: 'C', influenceEurope: 'C' };
+const FOCUS = { raise: 'sec-ports', place: 'sec-chars', stock: 'sec-stock', chooseCard: 'bar', sail: 'sec-map', load: 'sec-indies', sellWarehouse: 'sec-europe', unload: 'sec-europe' };
+let G, history = [], ui = {}, lastFocus = '';
+let MODE = null; // 'local' | 'online'
+const NET = { db: null, user: null, uid: null, canWrite: null, code: null, ref: null, unsub: null, ver: 0, busy: false, room: null, roomsUnsub: null, rooms: [] };
+const TAB = Math.random().toString(36).slice(2, 8);
+let mine = new Set();
+const canAct = () => !!G && !G.over && (MODE === 'local' || mine.has(G.awaiting.player));
+const seeAll = () => MODE === 'local';
+const $ = id => document.getElementById(id);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const meeple = (p, cls = '') => `<svg class="meeple ${cls}" viewBox="0 0 24 24" style="fill:${PCOL[p]}" aria-label="${esc(G.players[p].name)} 요원"><path d="M12 2a4 4 0 0 1 3.6 5.7c3 .8 6.4 2.6 6.4 4.8 0 1.2-1.6 1.5-3.4 1.3L20 22h-5.5L12 17.5 9.5 22H4l1.4-8.2C3.6 14 2 13.7 2 12.5c0-2.2 3.4-4 6.4-4.8A4 4 0 0 1 12 2z"/></svg>`;
+const coin = n => `<span class="coin">${n}</span>`;
+const cube = (g, cls = '') => `<i class="cube ${g} ${cls}" title="${GOOD_KO[g]}"></i>`;
+const pdot = p => `<i class="pdot" style="background:${PCOL[p]}"></i>`;
+function save() { if (MODE !== 'local') return; try { localStorage.setItem('eic-save', JSON.stringify(G)); } catch (e) {} }
+function load() { try { const t = localStorage.getItem('eic-save'); if (t) { const s = JSON.parse(t); if (s && s.players && s.awaiting) return s; } } catch (e) {} return null; }
+function newGame() { MODE = 'local'; G = createGame({ seed: Math.floor(Math.random() * 1e9) }); history = []; ui = {}; lastFocus = ''; save(); render(); }
+function trimLog(s) { if (s.log.length > 150) s.log = s.log.slice(-150); }
+function doAct(a) {
+  if (!a) return;
+  if (MODE === 'online') return netAct(a);
+  history.push(JSON.stringify(G)); if (history.length > 80) history.shift(); apply(G, a); ui = {}; save(); render();
+}
+function undo() { if (MODE === 'online') return netUndo(); if (!history.length) return; G = JSON.parse(history.pop()); ui = {}; save(); render(); }
+const LA = () => (canAct() ? legalActions(G) : []);
+const sameCounts = (a, b) => GOODS.every(g => (a[g] || 0) === (b[g] || 0));
+const countOf = arr => arr.reduce((o, g) => (o[g] = (o[g] || 0) + 1, o), {});
+
+function shipDisc(d, p, attrs = '', cls = '') {
+  const i = shipInfo(d.type);
+  return `<button type="button" class="ship ${cls}" style="--pc:${PCOL[p]}" ${attrs}><span class="ship-n">${SHIP_KO[d.type]}</span><span class="ship-s"><b title="톤수">▣${i.tonnage}</b><b title="속도">≫${i.speed}</b></span>${d.cargo.length ? `<span class="ship-c">${d.cargo.map(g => cube(g)).join('')}</span>` : ''}</button>`;
+}
+
+function renderStatus() {
+  const aw = G.awaiting;
+  $('status').innerHTML = `<div class="st-l"><b class="period">${G.period}기간</b><span class="yrs">${PERIOD_KO[G.period]}</span></div>
+    <div class="phases">${'ABCDEF'.split('').map(p => `<span class="${p === G.phase && !G.over ? 'on' : ''}" title="${PHASE_KO[p]}">${p}</span>`).join('')}</div>
+    <div class="init">${G.initiative.map((p, i) => `<span class="wheel ${aw.player === p ? 'cur' : ''}" style="--pc:${PCOL[p]}" title="${esc(G.players[p].name)}">${i + 1}</span>`).join('')}</div>`;
+}
+function renderStock() {
+  const tr = DATA.stockTrack, aw = G.awaiting, buy = aw.type === 'stock';
+  const cells = tr.prices.map((pr, i) => `<div class="sx d${tr.dividends[i]}"><span class="sx-d">${i === 0 || tr.dividends[i] !== tr.dividends[i - 1] ? '배당 ' + tr.dividends[i] : ''}</span><span class="sx-p">${pr}</span><span class="sx-m">${G.stock.map((s, c) => s.idx === i ? pdot(c) : '').join('')}</span></div>`).join('');
+  const certs = G.players.map((pl, c) => { const ok = buy && LA().some(a => a.type === 'buyShare' && a.company === c);
+    return `<button type="button" class="cert ${ok ? 'legal' : ''}" style="--pc:${PCOL[c]}" ${ok ? `data-buy="${c}"` : 'disabled'}><span class="cert-n">${esc(pl.name)}</span><span class="cert-k">${G.stock[c].inExchange}장</span>${coin(price(G, c))}</button>`; }).join('');
+  $('sec-stock').innerHTML = `<h2>증권거래소</h2><div class="sxwrap"><div class="sxtrack">${cells}</div></div><div class="certs">${certs}</div>`;
+}
+function renderChars() {
+  const aw = G.awaiting, la = aw.type === 'place' ? LA() : [];
+  const slotBtn = (c, sl) => { const key = c + '.' + sl, occ = G.occ[key] || [], acts = la.filter(a => a.type === 'place' && a.char === c && a.slot === sl);
+    return `<button type="button" class="slot ${acts.length ? 'legal' : ''}" ${acts.length ? `data-slot="${key}"` : 'disabled'}>${SLOT_PHASE[sl] ? `<span class="ph">${SLOT_PHASE[sl]}</span>` : ''}<span class="slot-t">${SLOT_SHORT[sl]}</span><span class="slot-m">${occ.map(p => meeple(p)).join('')}${acts.length && occ.length ? `<span class="fee">+${occ.length}</span>` : ''}</span></button>`; };
+  const card = c => `<div class="char c-${c}"><div class="portrait">${CHAR_KO[c][0]}</div><h3>${CHAR_KO[c]}</h3>${SLOTS[c].map(sl => slotBtn(c, sl)).join('')}</div>`;
+  const cacts = la.filter(a => a.type === 'place' && a.char === 'center');
+  const center = `<button type="button" class="center ${cacts.length ? 'legal' : ''}" ${cacts.length ? 'data-center="1"' : 'disabled'}><span>중앙</span><span class="slot-m">${G.center.map(p => meeple(p)).join('')}</span></button>`;
+  $('sec-chars').innerHTML = `<h2>캐릭터</h2><div class="ring">${card('trader')}${card('investor')}${center}${card('shipowner')}${card('captain')}${card('governor')}</div><p class="hint">옆자리: 상인–선주–총독–선장–투자자–상인</p>`;
+}
+function renderMap() {
+  const aw = G.awaiting, sail = aw.type === 'sail', la = sail ? LA() : [];
+  const regs = ['III', 'II', 'I'].map(r => { const rg = DATA.regions[r];
+    const ok = sail && ui.ship != null && la.some(a => a.dock === ui.ship && a.region === r);
+    const ships = G.regions[r].map(e => { const d = G.players[e.p].docks[e.dock]; const cur = aw.type === 'load' && aw.player === e.p && aw.dock === e.dock;
+      if (!seeAll() && G.phase === 'C' && !d.stayed && !mine.has(e.p)) return `<span class="ship back" style="--pc:${PCOL[e.p]}" title="뒤집어 둔 배">?</span>`;
+      return shipDisc(d, e.p, 'disabled', (cur ? 'cur ' : '') + (d.stayed ? 'stay' : '')); }).join('');
+    return `<button type="button" class="region ${ok ? 'legal' : ''}" ${ok ? `data-region="${r}"` : ''} ${!ok && !ships ? 'disabled' : ''}><div class="rg-h"><b>${r}</b> ${rg.name} ${rg.sailCost ? coin(rg.sailCost) : '<span class="free">무료</span>'} <span class="rg-g">${rg.goods.map(g => cube(g)).join('')}</span></div>
+      <div class="cities">${rg.cities.map((c, i) => `<span class="city">${G.cities[r + i] != null ? `<i class="post" style="background:${PCOL[G.cities[r + i]]}"></i>` : '<i class="post none"></i>'}${c}</span>`).join('')}</div><div class="rg-s">${ships}</div></button>`; }).join('');
+  $('sec-map').innerHTML = `<h2>인도 지도</h2><div class="map">${regs}</div>`;
+}
+function marketBoard(m) {
+  const prices = Object.keys(DATA.markets4p[m]).filter(k => /^\d+$/.test(k)).map(Number).sort((a, b) => a - b);
+  const rows = prices.map(p => `<tr><th>${coin(p)}</th>${GOODS.map(g => { const sl = marketSlots(m, g), n = G.markets[m][g]; let h = '';
+    sl.forEach((v, i) => { if (v !== p) return; const next = m === 'europe' ? i === n : i === n - 1; h += `<i class="cube ${i < n ? g : 'empty'} ${next ? 'next' : ''}"></i>`; });
+    return `<td>${h}</td>`; }).join('')}</tr>`).join('');
+  const k = G.period <= 2 ? 'p1-2' : G.period <= 4 ? 'p3-4' : 'p5', peeked = G.cards[m] != null && !G.cards.shown[m] && (G.cards.peek[m] || []).some(p => seeAll() || mine.has(p)), c = G.cards[m] != null && (G.cards.shown[m] || peeked) ? DATA.marketCards[m][k][G.cards[m]].all : null;
+  const dice = GOODS.map((g, i) => `<td><span class="die ${g}">${G.dice[m][g]}</span>${c ? `<span class="cardn">+${c[i]}</span>` : ''}</td>`).join('');
+  const now = GOODS.map(g => { const v = m === 'europe' ? sellPrice(G, g) : buyPrice(G, g); return `<td class="now">${v == null ? '–' : v}</td>`; }).join('');
+  return `${peeked ? '<p class="hint peek">영향력으로 미리 본 카드 값이 노란 숫자로 보입니다.</p>' : ''}<div class="scroll"><table class="mk ${m}"><thead><tr><th></th>${GOODS.map(g => `<th>${cube(g)}<br>${GOOD_KO[g]}</th>`).join('')}</tr><tr class="dice"><th>${m === 'europe' ? '수요' : '공급'}</th>${dice}</tr></thead><tbody>${rows}</tbody><tfoot><tr><th>${m === 'europe' ? '판매가' : '구매가'}</th>${now}</tr></tfoot></table></div>`;
+}
+function renderMarkets() {
+  $('sec-europe').innerHTML = `<h2>유럽 시장</h2>${marketBoard('europe')}<p class="hint">팔면 테두리 친 칸에 큐브가 놓입니다. 카드는 E 단계에 공개됩니다.</p>`;
+  $('sec-indies').innerHTML = `<h2>인도 시장</h2>${marketBoard('indies')}<p class="hint">테두리 친 큐브부터 삽니다. 카드는 D 단계에 공개됩니다.</p>`;
+}
+function renderPorts() {
+  const aw = G.awaiting, la = LA(), first = MODE === 'online' && mine.size ? [...mine] : G.over ? [] : [aw.player];
+  const order = [...first, ...G.initiative.filter(p => !first.includes(p))];
+  $('sec-ports').innerHTML = `<h2>항구</h2>` + order.map(p => { const pl = G.players[p], mine = canAct() && p === aw.player;
+    const docks = [...Array(dockCount(pl)).keys()].map(i => { const d = pl.docks[i]; if (!d) return `<span class="dock">빈 부두</span>`;
+      if (d.loc !== 'port' && d.loc !== 'sea') return `<span class="dock away">${DATA.regions[d.loc].name}에 있음</span>`;
+      const can = mine && aw.type === 'sail' && d.loc === 'port';
+      const cur = mine && aw.type === 'unload' && aw.dock === i;
+      return shipDisc(d, p, can ? `data-ship="${i}"` : 'disabled', (can ? 'legal ' : '') + (mine && ui.ship === i ? 'sel ' : '') + (cur ? 'cur ' : '') + (d.loc === 'sea' ? 'sea' : '')); }).join('');
+    const held = pl.shares.map((k, c) => { if (!k) return ''; const ok = mine && la.some(a => a.type === 'sellShare' && a.company === c);
+      return `<button type="button" class="cert mini ${ok ? 'legal' : ''}" style="--pc:${PCOL[c]}" ${ok ? `data-sell="${c}"` : 'disabled'}><span class="cert-n">${esc(G.players[c].name)}</span><span class="cert-k">×${k}</span></button>`; }).join('');
+    const marks = [0, 1, 2, 3, 4, 5].map(i => `<span class="sm ${pl.salesMarker === i ? 'on' : ''}">${i ? i * 10 + '+' : '0'}</span>`).join('');
+    const left = pl.agents.filter(a => a.at == null).map(() => meeple(p)).join('');
+    return `<div class="port ${mine ? 'mine' : ''}" style="--pc:${PCOL[p]}"><div class="port-h"><b>${esc(pl.name)}</b>${MODE === 'online' && NET_MINE(p) ? '<span class="me">나</span>' : ''}${left}<span class="vault">금고 ${coin(pl.treasury)}</span><span class="vault">판매액 ${coin(pl.sales)}</span>${pl.debt ? `<span class="vault debt">부채 ${pl.debt}</span>` : ''}</div>
+      <div class="docks">${docks}<span class="wh">창고 ${pl.warehouse.length}/${whCap(pl)} ${pl.warehouse.map(g => cube(g)).join('')}</span></div>
+      <div class="port-f"><span class="smt">${marks}</span><span class="certs-h"><button type="button" class="cert mini" style="--pc:${PCOL[p]}" disabled><span class="cert-n">경영권</span><span class="cert-k">×2</span></button>${held}</span></div>
+      <div class="hint">살 수 있는 배: ${[...new Set(pl.supply)].map(t => { const i = shipInfo(t); return `${SHIP_KO[t]}${pl.supply.filter(x => x === t).length > 1 ? '×2' : ''}<span class="${i.period > G.period ? 'late' : ''}">(${i.period}기간~, ${i.cost}GP)</span>`; }).join(' ') || '없음'}</div></div>`; }).join('');
+}
+function renderBar() {
+  const bar = $('bar');
+  if (G.over) { bar.innerHTML = `<div class="bar-t"><b>게임 종료</b></div><div class="scroll"><table class="score"><thead><tr><th>순위</th><th>회사</th><th>경영권</th><th>주식</th><th>현금</th><th>부채</th><th>합계</th></tr></thead><tbody>${G.ranking.map((p, i) => { const sc = G.scores[p]; return `<tr><td>${i + 1}</td><td>${pdot(p)}${esc(G.players[p].name)}</td><td>${sc.president}</td><td>${sc.shares}</td><td>${sc.cash}</td><td>${sc.debt ? '−' + sc.debt : ''}</td><td><b>${sc.total}</b></td></tr>`; }).join('')}</tbody></table></div>`; return; }
+  const aw = G.awaiting, p = aw.player, pl = G.players[p], la = LA();
+  let msg = '', ctl = '';
+  if (!canAct()) {
+    bar.innerHTML = `<div class="bar-t" style="--pc:${PCOL[p]}">${meeple(p, 'lg')}<div><b>${esc(pl.name)}</b> <span class="bar-ph">${G.phase} ${PHASE_KO[G.phase]}</span><div class="bar-m">${esc(pl.name)} 님 차례입니다. 기다리는 중…</div></div></div>`;
+    return;
+  }
+  if (ui.chooser) { msg = ui.chooser.title; ctl = ui.chooser.acts.map((a, i) => `<button type="button" class="go" data-ch="${i}">${esc(a.short)}</button>`).join('') + `<button type="button" data-cancel="1">취소</button>`; }
+  else if (aw.type === 'place') { msg = '빛나는 칸을 눌러 요원을 놓으세요'; if (la.some(a => a.type === 'passA')) ctl = `<button type="button" class="go" data-pass="passA">중앙 요원을 두고 마침</button>`; }
+  else if (aw.type === 'raise') { msg = `${esc(G.players[aw.to].name)}에게 배당 ${aw.need}GP를 내야 하는데 금고가 ${pl.treasury}GP예요. 주식을 팔아 돈을 마련하세요. 팔 주식이 없으면 모자란 만큼 부채로 남아요.`; ctl = la.map(a => `<button type="button" class="go" data-forced="${a.company}">${esc(a.label)}</button>`).join(''); }
+  else if (aw.type === 'stock') { msg = '거래소의 주식을 눌러 1장 사거나 패스하세요'; ctl = `<button type="button" class="go" data-pass="pass">패스</button>`; }
+  else if (aw.type === 'chooseCard') { msg = `${aw.market === 'indies' ? '인도(공급)' : '유럽(수요)'} 카드를 고르세요`; ctl = la.filter(a => a.type === 'chooseCard').map(a => { const c = DATA.marketCards[aw.market][G.period <= 2 ? 'p1-2' : G.period <= 4 ? 'p3-4' : 'p5'][a.card].all; return `<button type="button" class="mcard ${aw.market}" data-card="${a.card}">${GOODS.map((g, i) => `<span>${cube(g)}${c[i]}</span>`).join('')}</button>`; }).join(''); }
+  else if (aw.type === 'sail') { msg = ui.ship == null ? '보낼 배를 누르세요' : '빛나는 지역을 누르세요'; }
+  else if (aw.type === 'load') {
+    const d = pl.docks[aw.dock], rg = DATA.regions[aw.region], t = shipInfo(d.type).tonnage, pick = ui.pick || (ui.pick = {});
+    const goodsOf = pk => rg.goods.flatMap(g => Array(pk[g] || 0).fill(g));
+    const find = pk => la.find(a => a.type === 'load' && sameCounts(countOf(a.goods), pk));
+    const total = goodsOf(pick).length, cost = loadCost(G, p, aw.region, goodsOf(pick));
+    msg = `${SHIP_KO[d.type]} · ${rg.name} · 톤수 ${total}/${t}`;
+    ctl = rg.goods.map(g => { const up = find({ ...pick, [g]: (pick[g] || 0) + 1 }); const nextCost = up ? loadCost(G, p, aw.region, goodsOf({ ...pick, [g]: (pick[g] || 0) + 1 })) - cost : null;
+      return `<span class="step"><button type="button" data-minus="${g}" ${pick[g] ? '' : 'disabled'} aria-label="${GOOD_KO[g]} 빼기">−</button><span class="step-n">${cube(g)}${pick[g] || 0}</span><button type="button" data-plus="${g}" ${up ? '' : 'disabled'} aria-label="${GOOD_KO[g]} 싣기">+${nextCost != null ? `<small>${nextCost}</small>` : ''}</button></span>`; }).join('')
+      + `<button type="button" class="go" data-load="1">${total ? `싣기 ${cost}GP` : '빈 배로 귀환'}</button>` + (la.some(a => a.type === 'stay') ? `<button type="button" data-stay="1">잔류 1GP</button>` : '');
+  } else if (aw.type === 'sellWarehouse' || aw.type === 'unload') {
+    const src = aw.type === 'unload' ? pl.docks[aw.dock].cargo : pl.warehouse;
+    if (!ui.sell || ui.sell.length !== src.length) ui.sell = src.map(() => true);
+    const counts = countOf(src.filter((_, i) => ui.sell[i])), act = la.find(a => a.type === aw.type && sameCounts(a.sell, counts));
+    msg = aw.type === 'unload' ? `${SHIP_KO[pl.docks[aw.dock].type]} 하역 — 큐브를 눌러 팔기/보관을 바꾸세요` : '창고 — 큐브를 눌러 팔기/보관을 바꾸세요';
+    ctl = src.map((g, i) => `<button type="button" class="pickc ${ui.sell[i] ? 'on' : ''}" data-tg="${i}">${cube(g, 'big')}<small>${ui.sell[i] ? '판매' : '보관'}</small></button>`).join('')
+      + `<button type="button" class="go" data-sellgo="1" ${act ? '' : 'disabled'}>${act ? `확정 +${saleGain(G, p, counts)}GP` : '창고 자리 부족'}</button>`;
+  }
+  bar.innerHTML = `<div class="bar-t" style="--pc:${PCOL[p]}">${meeple(p, 'lg')}<div><b>${esc(pl.name)}</b> <span class="bar-ph">${G.phase} ${PHASE_KO[G.phase]}</span> ${coin(pl.treasury)}<div class="bar-m">${msg}</div></div></div><div class="bar-c">${ctl}</div>`;
+}
+function render() {
+  renderStatus(); renderStock(); renderChars(); renderMap(); renderMarkets(); renderPorts(); renderBar();
+  $('log').innerHTML = G.log.slice(-60).reverse().map(l => `<li>${esc(l)}</li>`).join('');
+  $('undo').disabled = MODE === 'online' ? !(NET.room && NET.room.prev && NET.room.prevBy === NET.uid && !NET.busy) : !history.length;
+  $('new').hidden = MODE !== 'local'; $('leave').hidden = false; $('leave').textContent = MODE === 'online' ? '방 목록으로' : '처음 화면으로';
+  $('roomtag').hidden = false; $('roomtag').textContent = MODE === 'online' ? `방 ${NET.code}${NET.hostGone ? ' · 방장 연결 끊김' : ''}` : '혼자 테스트';
+  document.title = MODE === 'online' && canAct() ? '● 내 차례 — 동인도회사' : '동인도회사';
+  const aw = G.awaiting;
+  if (aw.type === 'sail' && ui.ship == null) { const ds = G.players[aw.player].docks.map((d, i) => d && d.loc === 'port' ? i : -1).filter(i => i >= 0); if (ds.length === 1) { ui.ship = ds[0]; renderMap(); renderPorts(); renderBar(); } }
+  const f = G.over ? 'over' : aw.type + ':' + aw.player + ':' + G.phase;
+  if (f !== lastFocus && (canAct() || G.over)) { lastFocus = f; const id = G.over ? 'bar' : (aw.type === 'sail' ? 'sec-map' : FOCUS[aw.type]); const el = $(id); if (el && id !== 'bar' && el.scrollIntoView) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+  document.querySelectorAll('.sect').forEach(s => s.classList.toggle('focus', !G.over && s.id === (FOCUS[aw.type] || '')));
+}
+const short = a => a.label.replace(/^.*? · /, '').replace(/^배 구입: /, '').replace(/^교역소: /, '');
+function choose(title, acts) { if (acts.length === 1) return doAct(acts[0]); ui.chooser = { title, acts: acts.map(a => ({ ...a, short: (a.label.startsWith('(') || a.label.startsWith('중앙에서') ? a.label.split(' · ')[0].replace(/→ .*/, '→ ') + ' ' : '') + short(a) })) }; renderBar(); }
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.l != null || b.id === 'leave') return lobbyClick(b);
+  if (!G) return;
+  const ds = b.dataset, aw = G.awaiting, la = LA();
+  if (b.id === 'undo') return undo();
+  if (b.id === 'new') { $('confirm').hidden = false; return; }
+  if (b.id === 'new-yes') { $('confirm').hidden = true; return newGame(); }
+  if (b.id === 'new-no') { $('confirm').hidden = true; return; }
+  if (ds.cancel) { ui.chooser = null; return renderBar(); }
+  if (ds.ch != null) { const a = ui.chooser.acts[+ds.ch]; return doAct(la.find(x => x.key === a.key)); }
+  if (ds.slot) { const [c, sl] = ds.slot.split('.'); return choose(`${CHAR_KO[c]} · ${SLOT_KO[sl]}`, la.filter(a => a.type === 'place' && a.char === c && a.slot === sl)); }
+  if (ds.center) return choose('중앙에 배치', la.filter(a => a.type === 'place' && a.char === 'center'));
+  if (ds.pass) return doAct(la.find(a => a.type === ds.pass));
+  if (ds.buy != null) return doAct(la.find(a => a.type === 'buyShare' && a.company === +ds.buy));
+  if (ds.forced != null) return doAct(la.find(a => a.type === 'sellShare' && a.company === +ds.forced));
+  if (ds.sell != null && aw.type === 'raise') return doAct(la.find(a => a.type === 'sellShare' && a.company === +ds.sell));
+  if (ds.sell != null) { const a = la.find(x => x.type === 'sellShare' && x.company === +ds.sell); ui.chooser = { title: '주식 매도 (차례를 쓰지 않음)', acts: [{ ...a, short: a.label }] }; return renderBar(); }
+  if (ds.card != null) return doAct(la.find(a => a.type === 'chooseCard' && a.card === +ds.card));
+  if (ds.ship != null) { ui.ship = +ds.ship; return render(); }
+  if (ds.region) return doAct(la.find(a => a.type === 'sail' && a.dock === ui.ship && a.region === ds.region));
+  if (ds.plus) { ui.pick[ds.plus] = (ui.pick[ds.plus] || 0) + 1; return renderBar(); }
+  if (ds.minus) { ui.pick[ds.minus]--; return renderBar(); }
+  if (ds.load) return doAct(la.find(a => a.type === 'load' && sameCounts(countOf(a.goods), ui.pick || {})));
+  if (ds.stay) return doAct(la.find(a => a.type === 'stay'));
+  if (ds.tg != null) { ui.sell[+ds.tg] = !ui.sell[+ds.tg]; return renderBar(); }
+  if (ds.sellgo) { const src = aw.type === 'unload' ? G.players[aw.player].docks[aw.dock].cargo : G.players[aw.player].warehouse; const counts = countOf(src.filter((_, i) => ui.sell[i])); return doAct(la.find(a => a.type === aw.type && sameCounts(a.sell, counts))); }
+});
+// ---------- 온라인 방 (깃허브 판: 브라우저끼리 직접 연결) ----------
+// 방장 브라우저가 판정한다. 손님은 행동만 보내고, 방장은 사람마다 숨길 정보를 가린 판을 보낸다.
+const NET_MINE = p => mine.has(p);
+const SEAT_KO = ['빨강', '파랑', '노랑', '회색'];
+const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+const PEER_PREFIX = 'eic-abnextc-';
+function nick() { try { return localStorage.getItem('eic-nick') || ''; } catch (e) { return ''; } }
+function setNick(v) { try { localStorage.setItem('eic-nick', v); } catch (e) {} }
+function myToken() {
+  try { let t = localStorage.getItem('eic-token'); if (!t) { t = Math.random().toString(36).slice(2, 10) + Date.now().toString(36); localStorage.setItem('eic-token', t); } return t; }
+  catch (e) { return 'tmp' + TAB; }
+}
+function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { el.hidden = true; }, 3500); }
+function show(which) {
+  $('lobby').hidden = which !== 'lobby'; $('game').hidden = which !== 'game'; $('bar').hidden = which !== 'game';
+  $('undo').hidden = which !== 'game'; $('new').hidden = which !== 'game' || MODE !== 'local';
+  $('leave').hidden = !(MODE === 'local' && which === 'game') && !NET.code;
+  $('roomtag').hidden = !NET.code && which !== 'game'; $('roomtag').textContent = NET.code ? `방 ${NET.code}` : '혼자 테스트';
+}
+const hostKey = code => 'eic-host-' + code;
+function savedHosts() {
+  const out = [];
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('eic-host-')) { const v = JSON.parse(localStorage.getItem(k)); if (v && v.room && v.room.status !== 'over') out.push({ code: k.slice(9), room: v.room, at: v.at || 0 }); } } } catch (e) {}
+  return out.sort((a, b) => b.at - a.at).slice(0, 5);
+}
+function roomLink() { return location.href.split('#')[0] + '#r-' + NET.code; }
+
+function renderLobby() {
+  const el = $('lobby'), d = NET.room, online = typeof Peer !== 'undefined';
+  if (!NET.code) {
+    const saved = savedHosts().map(r => `<li><button type="button" data-l="resume" data-code="${esc(r.code)}"><b>${esc(r.code)}</b><span>${r.room.status === 'lobby' ? '대기 중' : '진행 중'} · 내가 방장</span></button></li>`).join('');
+    el.innerHTML = `<h2>온라인 방</h2>
+      ${online ? '' : '<p class="warn">연결 도구를 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요. 지금은 혼자 테스트만 됩니다.</p>'}
+      <label class="fld" for="nick">닉네임</label><input id="nick" maxlength="10" value="${esc(nick())}" placeholder="예: 지원">
+      <div class="row"><button type="button" class="go" data-l="create" ${online ? '' : 'disabled'}>새 방 만들기</button><span class="hint">방을 만든 사람이 방장이에요. 방장 창이 열려 있어야 게임이 이어져요.</span></div>
+      <label class="fld" for="code">방 코드로 들어가기</label>
+      <div class="row"><input id="code" maxlength="4" placeholder="ABCD" autocapitalize="characters"><button type="button" data-l="joincode" ${online ? '' : 'disabled'}>들어가기</button></div>
+      ${saved ? `<h3>내가 만든 방 이어서 하기</h3><ul class="rooms">${saved}</ul>` : ''}
+      <hr><div class="row"><button type="button" data-l="local">혼자 4자리 테스트</button><span class="hint">한 기기에서 네 자리를 번갈아 조작합니다.</span></div>`;
+    return;
+  }
+  const status = NET.role === 'host' ? (NET.online ? '방장 · 손님을 기다리는 중' : '연결 준비 중…') : (NET.hostGone ? '방장과 연결이 끊겼어요. 다시 잇는 중…' : d ? '방장과 연결됨' : '방장에게 연결하는 중…');
+  if (!d) { el.innerHTML = `<h2>방 <span class="code">${esc(NET.code)}</span></h2><p class="hint">${status}</p><div class="row"><button type="button" data-l="back">나가기</button></div>`; return; }
+  const seats = d.seats.map((s, i) => {
+    const me = s && s.uid === NET.uid;
+    return `<div class="seat" style="--pc:${PCOL[i]}"><span class="seat-c">${SEAT_KO[i]}</span><b>${s ? esc(s.name) : '빈 자리'}</b>${me ? '<span class="me">나</span>' : ''}${s && !s.on && !me ? '<span class="seat-c">연결 끊김</span>' : ''}
+      ${!s ? `<button type="button" data-l="sit" data-i="${i}">앉기</button>` : me ? `<button type="button" data-l="stand" data-i="${i}">일어나기</button>` : ''}</div>`;
+  }).join('');
+  const full = d.seats.every(Boolean), seated = d.seats.some(s => s && s.uid === NET.uid);
+  el.innerHTML = `<h2>방 <span class="code">${esc(NET.code)}</span></h2>
+    <p class="hint">${status}</p>
+    <div class="row"><input id="link" readonly value="${esc(roomLink())}"><button type="button" data-l="copy">링크 복사</button></div>
+    <p class="hint">친구에게 이 링크를 보내거나, 같은 주소에서 방 코드 <b>${esc(NET.code)}</b>를 입력하게 하세요.</p>
+    <div class="seats">${seats}</div>
+    <p class="hint">한 사람이 여러 자리에 앉아도 됩니다. 네 자리가 다 차야 시작할 수 있어요.</p>
+    <div class="row"><button type="button" class="go" data-l="start" ${full && seated ? '' : 'disabled'}>게임 시작</button><button type="button" data-l="back">방에서 나가기</button></div>`;
+}
+
+// ---- 방장 ----
+const PEER_OPTS = { debug: 0 };
+function redact(full, seatsMine) {
+  const g = JSON.parse(JSON.stringify(full));
+  g.rng = 0;
+  for (const m of ['indies', 'europe']) if (g.cards[m] != null && !g.cards.shown[m] && !(g.cards.peek[m] || []).some(p => seatsMine.has(p))) g.cards[m] = null;
+  if (g.phase === 'C') g.players.forEach((pl, p) => { if (seatsMine.has(p)) return; pl.docks.forEach(d => { if (d && d.loc !== 'port' && d.loc !== 'sea' && !d.stayed) { d.type = 'galleon'; d.cargo = []; } }); });
+  return g;
+}
+const seatsOf = (room, uid) => new Set(room.seats.map((s, i) => (s && s.uid === uid ? i : -1)).filter(i => i >= 0));
+function viewFor(uid) {
+  const H = NET.H, r = H.room;
+  return { t: 'room', room: { code: NET.code, status: r.status, seats: r.seats.map(s => s && { uid: s.uid, name: s.name, on: s.uid === NET.uid || H.conns.has(s.uid) }), ver: r.ver, prev: !!H.prev, prevBy: r.prevBy },
+    state: r.status === 'lobby' ? null : JSON.stringify(redact(H.full, seatsOf(r, uid))) };
+}
+function hostSave() { try { localStorage.setItem(hostKey(NET.code), JSON.stringify({ room: NET.H.room, full: NET.H.full, prev: NET.H.prev, at: Date.now() })); } catch (e) {} }
+function hostPublish() {
+  hostSave();
+  takeRoom(viewFor(NET.uid));
+  for (const [uid, c] of NET.H.conns) { try { if (c.open) c.send(viewFor(uid)); } catch (e) {} }
+}
+function hostMsg(from, m) {
+  const H = NET.H, r = H.room, err = msg => from.reply({ t: 'err', msg });
+  if (!m || typeof m !== 'object') return;
+  if (m.t === 'sit') {
+    if (r.status !== 'lobby') return;
+    if (r.seats[m.i]) return err('이미 누가 앉았어요');
+    r.seats[m.i] = { uid: from.uid, name: String(m.name || '손님').slice(0, 10) };
+  } else if (m.t === 'stand') {
+    if (r.status !== 'lobby' || !r.seats[m.i] || r.seats[m.i].uid !== from.uid) return;
+    r.seats[m.i] = null;
+  } else if (m.t === 'start') {
+    if (r.status !== 'lobby' || !r.seats.every(Boolean) || !r.seats.some(s => s.uid === from.uid)) return;
+    H.full = createGame({ seed: Math.floor(Math.random() * 1e9), names: r.seats.map(s => s.name) });
+    r.status = 'playing'; r.ver = 1; H.prev = null; r.prevBy = null;
+  } else if (m.t === 'act') {
+    if (r.status !== 'playing') return;
+    if (m.ver !== r.ver) return err('판이 바뀌어서 최신 상태로 다시 그렸어요');
+    const g = H.full, owner = r.seats[g.awaiting.player];
+    if (!owner || owner.uid !== from.uid) return err('지금은 내 차례가 아니에요');
+    const a = legalActions(g).find(x => x.key === m.key);
+    if (!a) return err('둘 수 없는 수예요. 화면을 다시 그렸어요');
+    const before = JSON.stringify(g), P0 = g.period, F0 = g.phase;
+    apply(g, a); trimLog(g);
+    const undoable = g.period === P0 && g.phase === F0;
+    H.prev = undoable ? before : null; r.prevBy = undoable ? from.uid : null;
+    r.ver++; if (g.over) r.status = 'over';
+  } else if (m.t === 'undo') {
+    if (!H.prev || r.prevBy !== from.uid || m.ver !== r.ver) return err('지금은 무를 수 없어요');
+    H.full = JSON.parse(H.prev); H.prev = null; r.prevBy = null; r.ver++; r.status = 'playing';
+  } else if (m.t !== 'hello') return;
+  hostPublish();
+}
+function hostOpen(code, saved, tries = 0) {
+  MODE = 'online'; NET.role = 'host'; NET.code = code; NET.online = false; NET.room = null; NET.ver = 0; G = null;
+  NET.H = saved ? { conns: new Map(), room: saved.room, full: saved.full, prev: saved.prev } :
+    { conns: new Map(), room: { status: 'lobby', seats: [{ uid: NET.uid, name: nick() || '방장' }, null, null, null], ver: 0, prevBy: null }, full: null, prev: null };
+  try { location.hash = 'r-' + code; } catch (e) {}
+  show('lobby'); renderLobby();
+  const peer = NET.peer = new Peer(PEER_PREFIX + code, PEER_OPTS);
+  peer.on('open', () => { NET.online = true; hostPublish(); });
+  peer.on('connection', conn => {
+    conn.on('data', m => {
+      if (m && m.t === 'hello' && typeof m.uid === 'string') {
+        const old = NET.H.conns.get(m.uid); if (old && old !== conn) { try { old.close(); } catch (e) {} }
+        conn.uid = m.uid; NET.H.conns.set(m.uid, conn);
+      }
+      if (!conn.uid) return;
+      hostMsg({ uid: conn.uid, reply: x => { try { conn.send(x); } catch (e) {} } }, m);
+    });
+    conn.on('close', () => { if (conn.uid && NET.H && NET.H.conns.get(conn.uid) === conn) { NET.H.conns.delete(conn.uid); hostPublish(); } });
+  });
+  peer.on('disconnected', () => { NET.online = false; renderLobby(); setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch (e) {} }, 2000); });
+  peer.on('error', e => {
+    if (e.type === 'unavailable-id') {
+      try { peer.destroy(); } catch (x) {}
+      if (saved && tries < 8) { toast('방을 다시 여는 중… 잠시만요'); setTimeout(() => { if (NET.code === code) hostOpen(code, saved, tries + 1); }, 4000); }
+      else if (!saved) hostOpen(newCode(), null, tries + 1);
+      else { toast('이 방 코드를 다른 창에서 쓰고 있어요'); leaveRoom(); }
+    } else if (e.type === 'network' || e.type === 'server-error' || e.type === 'socket-error') toast('연결 서버에 닿지 못했어요. 인터넷 연결을 확인해 주세요');
+  });
+}
+function newCode() { return Array.from({ length: 4 }, () => CODE_CH[Math.floor(Math.random() * CODE_CH.length)]).join(''); }
+
+// ---- 손님 ----
+function guestOpen(code) {
+  MODE = 'online'; NET.role = 'guest'; NET.code = code; NET.room = null; NET.ver = 0; NET.hostGone = false; G = null;
+  try { location.hash = 'r-' + code; } catch (e) {}
+  show('lobby'); renderLobby();
+  const peer = NET.peer = new Peer(undefined, PEER_OPTS);
+  peer.on('open', () => guestConnect());
+  peer.on('disconnected', () => setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch (e) {} }, 2000));
+  peer.on('error', e => {
+    if (e.type === 'peer-unavailable') { NET.hostGone = true; if (!NET.room) toast(`${code} 방을 찾지 못했어요. 코드가 맞는지, 방장 창이 열려 있는지 확인해 주세요`); retryGuest(); renderLobby(); if (G) render(); }
+    else if (e.type === 'network' || e.type === 'server-error' || e.type === 'socket-error') toast('연결 서버에 닿지 못했어요. 인터넷 연결을 확인해 주세요');
+  });
+}
+function retryGuest() { clearTimeout(retryGuest.t); retryGuest.t = setTimeout(() => { if (NET.role === 'guest' && NET.code && NET.hostGone && NET.peer && !NET.peer.destroyed) guestConnect(); }, 4000); }
+function guestConnect() {
+  const c = NET.conn = NET.peer.connect(PEER_PREFIX + NET.code, { reliable: true });
+  c.on('open', () => { NET.hostGone = false; c.send({ t: 'hello', uid: NET.uid, name: nick() || '손님' }); });
+  c.on('data', m => { if (!m) return; if (m.t === 'room') takeRoom(m); else if (m.t === 'err') { NET.busy = false; toast(m.msg); if (G) render(); } });
+  c.on('close', () => { if (NET.conn !== c) return; NET.hostGone = true; NET.busy = false; toast('방장과 연결이 끊겼어요. 다시 잇는 중…'); renderLobby(); if (G) render(); retryGuest(); });
+}
+
+// ---- 공통 ----
+function send(m) {
+  if (NET.role === 'host') return hostMsg({ uid: NET.uid, reply: x => { if (x.t === 'err') { NET.busy = false; toast(x.msg); if (G) render(); } } }, m);
+  if (NET.conn && NET.conn.open) { NET.conn.send(m); return; }
+  NET.busy = false; toast('방장과 연결이 끊겨 있어요. 다시 잇는 중이에요');
+}
+function takeRoom(m) {
+  NET.room = m.room;
+  mine = new Set(m.room.seats.map((s, i) => (s && s.uid === NET.uid ? i : -1)).filter(i => i >= 0));
+  if (m.room.status === 'lobby') { G = null; show('lobby'); renderLobby(); return; }
+  if (m.room.ver !== NET.ver || !G) { G = JSON.parse(m.state); NET.ver = m.room.ver; ui = {}; }
+  NET.busy = false; clearTimeout(netAct.t);
+  show('game'); render();
+}
+function netAct(a) {
+  if (NET.busy) return; NET.busy = true;
+  netAct.t = setTimeout(() => { if (NET.busy) { NET.busy = false; toast('응답이 없어요. 다시 눌러 주세요'); render(); } }, 6000);
+  send({ t: 'act', key: a.key, ver: NET.ver });
+}
+function netUndo() { if (NET.busy) return; send({ t: 'undo', ver: NET.ver }); }
+function leaveRoom() {
+  try { if (NET.peer) NET.peer.destroy(); } catch (e) {}
+  NET.peer = null; NET.conn = null; NET.H = null; NET.code = null; NET.room = null; NET.role = null; mine = new Set();
+  MODE = null; G = null;
+  try { history = []; location.hash = ''; } catch (e) {}
+  show('lobby'); renderLobby();
+}
+function readNick() { const n = ($('nick') && $('nick').value || '').trim(); if (n) setNick(n); return n || nick(); }
+async function lobbyClick(b) {
+  const l = b.dataset.l;
+  if (b.id === 'leave') { if (MODE === 'local') { MODE = null; G = null; show('lobby'); return renderLobby(); } return leaveRoom(); }
+  if (l === 'local') { MODE = 'local'; G = load() || createGame({ seed: Math.floor(Math.random() * 1e9) }); history = []; show('game'); return render(); }
+  if (l === 'create') { if (!readNick()) { toast('닉네임을 먼저 적어 주세요'); $('nick').focus(); return; } return hostOpen(newCode(), null); }
+  if (l === 'joincode') { const c = ($('code').value || '').trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) return toast('방 코드는 영문 4글자예요'); readNick(); return guestOpen(c); }
+  if (l === 'resume') { readNick(); let v = null; try { v = JSON.parse(localStorage.getItem(hostKey(b.dataset.code))); } catch (e) {} return v ? hostOpen(b.dataset.code, v) : toast('저장된 방을 찾지 못했어요'); }
+  if (l === 'back') return leaveRoom();
+  if (l === 'sit') return send({ t: 'sit', i: +b.dataset.i, name: nick() || '손님' });
+  if (l === 'stand') return send({ t: 'stand', i: +b.dataset.i });
+  if (l === 'start') return send({ t: 'start' });
+  if (l === 'copy') { const t = roomLink(); try { await navigator.clipboard.writeText(t); toast('링크를 복사했어요'); } catch (e) { const i = $('link'); if (i && i.select) i.select(); toast('링크를 길게 눌러 복사해 주세요'); } }
+}
+document.addEventListener('input', e => { if (e.target.id === 'nick') setNick(e.target.value.trim()); });
+
+function boot() {
+  NET.uid = myToken();
+  show('lobby'); renderLobby();
+  const h = (location.hash || '').match(/^#r-([A-Z]{4})$/);
+  if (!h || typeof Peer === 'undefined') return;
+  let v = null; try { v = JSON.parse(localStorage.getItem(hostKey(h[1]))); } catch (e) {}
+  if (v) hostOpen(h[1], v); else guestOpen(h[1]);
+}
+boot();
+
+</script>
+</body>
+</html>
